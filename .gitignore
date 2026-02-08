@@ -1,0 +1,27 @@
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Compiled class files
+*.class
+bin/
+target/
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Virtual machine crash logs
+hs_err_pid*
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# IntelliJ (in case you switch)
+.idea/
+*.iml
