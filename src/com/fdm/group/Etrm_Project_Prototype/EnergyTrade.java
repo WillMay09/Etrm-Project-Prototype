@@ -5,16 +5,15 @@ import java.time.LocalDate;
 public abstract class EnergyTrade implements Tradeable{
 	
 	
-	private String unit;
+	protected String unit;
 	
 	protected double quantity;
 	
-	private String counterParty;
+	protected String counterParty;
+	 
+	protected String dealId;
 	
-	private String dealId;
-	
-	private double price;
-	
+	protected double price;
 	
 	protected LocalDate tradeDate;
 	
@@ -22,7 +21,7 @@ public abstract class EnergyTrade implements Tradeable{
 	
 	
 	//constructor
-	public EnergyTrade(String dealId, LocalDate tradeDate, String counterParty, double quantity, String unit) {
+	public EnergyTrade(String dealId, LocalDate tradeDate, String counterParty, double quantity, String unit, double price) {
 		
 		if(dealId == null || dealId.trim().isEmpty()) {
 			
@@ -35,6 +34,7 @@ public abstract class EnergyTrade implements Tradeable{
 		this.dealId = dealId;
 		this.tradeDate = tradeDate;
 		this.contractPrice = contractPrice;
+		this.price = price;
 		
 	}
 	
