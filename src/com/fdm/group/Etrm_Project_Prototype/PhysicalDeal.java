@@ -15,8 +15,8 @@ public abstract class PhysicalDeal extends EnergyTrade {
 	
 	
 	
-	public PhysicalDeal(String dealId, LocalDate tradeDate, String counterParty, double quantity,double contractPrice, String unit,
-			String deliveryLocation, LocalDate deliveryStartDate, LocalDate deliveryEndDate, double price) {
+	public PhysicalDeal(String dealId, LocalDate tradeDate, String counterParty, double quantity,String unit,
+			double price) {
 		super(dealId, tradeDate, counterParty, quantity, unit, price);
 		this.deliveryLocation = deliveryLocation;
 		this.deliveryStartDate = deliveryStartDate;
