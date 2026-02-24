@@ -281,6 +281,13 @@ public abstract class OptionDeal extends DerivativeDeal {
     public boolean expiredWorthless() {
         return hasExpired() && calculateIntrinsicValue() == 0;
     }
+    
+    
+    
+    /**
+     * Calculate time decay (theta) - simplified
+     * Real implementation to use Greeks calculation
+     */
 	
 	
 
