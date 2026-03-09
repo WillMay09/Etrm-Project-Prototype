@@ -95,7 +95,7 @@ public abstract class OptionDeal extends DerivativeDeal {
 	 * Calculate option payoff at expiration (intrinsic value only)
 	 */
 
-	public abstract double calculatePayoffExpiry();
+	public abstract double calculatePayoffAtExpiry();
 
 	/**
 	 * Determine if option should be exercised at current prices
@@ -121,6 +121,7 @@ public abstract class OptionDeal extends DerivativeDeal {
 	@Override
 	public double calculateTimeValue() {
 		// Time Value = Option Premium - Intrinsic Value
+		//Option Value = IntrinsicValue + Time Value
 		double optionValue = calculateMTM();
 		double intrinsicValue = calculateIntrinsicValue();
 		return Math.max(0, optionValue - intrinsicValue);
@@ -252,8 +253,15 @@ public abstract class OptionDeal extends DerivativeDeal {
 
 	}
 	
+	//getCurrentFuturesPrice from MarketData
 	
+	//Placeholder
 	
+//	public double getCurrentFuturesPrice() {
+//		
+//		
+//		
+//	}
 
 //	In-The-Money (ITM):
 //
@@ -274,21 +282,112 @@ public abstract class OptionDeal extends DerivativeDeal {
 //		Put: Futures Price > Strike Price
 //		No intrinsic value (only time value)
 //		Example: 105 call with futures at 94 (OTM by $11
+
+	/**
+	 * Check if option has expired worthless
+	 */
+	public boolean expiredWorthless() {
+		return hasExpired() && calculateIntrinsicValue() == 0;
+	}
 	
-	  /**
-     * Check if option has expired worthless
-     */
-    public boolean expiredWorthless() {
-        return hasExpired() && calculateIntrinsicValue() == 0;
-    }
-    
-    
-    
-    /**
-     * Calculate time decay (theta) - simplified
-     * Real implementation to use Greeks calculation
-     */
+	public double calculateMTM() {//option value
+		
+		//MTM = current option value
+		//simplified version for now
+		
+		
+		double intrinsicValue = calculateIntrinsicValue();
+		double timeValue = estimateTimeValue();
+		
+		
+		return timeValue + intrinsicValue;
+		
+		
+		
+	}
 	
 	
+	public double estimateTimeValue() {
+		
+		long daysToExpiry = getDaysUntilExpiry();
+		
+		if(daysToExpiry <= 0) {
+			
+			return 0;
+		}
+		
+		double maxValue = premium * contractSize * numberOfContracts;
+		double decayFactor = (double) daysToExpiry / 365.0;
+		
+		return maxValue * decayFactor * 0.5;
+		
+	}
+
+	/**
+	 * Calculate time decay (theta) - simplified Real implementation to use Greeks
+	 * calculation
+	 */
+
+	// === GETTERS AND SETTERS ===
+
+	public String getOptionType() {
+		return optionType;
+	}
+
+	public double getPremium() {
+		return premium;
+	}
+
+	public String getPosition() {
+		return position;
+	}
+
+	public String getOptionStyle() {
+		return optionStyle;
+	}
+
+	public void setOptionStyle(String optionStyle) {
+		this.optionStyle = optionStyle;
+	}
+
+	public String getExpirationTime() {
+		return expirationTime;
+	}
+
+	public void setExpirationTime(String expirationTime) {
+		
+		if (!expirationTime.equals("AM") && !expirationTime.equals("PM")) {
+			throw new IllegalArgumentException("Expiration time must be 'AM' or 'PM'");
+		}
+		this.expirationTime = expirationTime;
+	}
+
+	public double getContractSize() {
+		return contractSize;
+	}
+
+	public void setContractSize(double contractSize) {
+		this.contractSize = contractSize;
+	}
+
+	public int getNumberOfContracts() {
+		return numberOfContracts;
+	}
+
+	public double getImpliedVolatility() {
+		return impliedVolatility;
+	}
+
+	public void setImpliedVolatility(double impliedVolatility) {
+		this.impliedVolatility = impliedVolatility;
+	}
+
+	public double getRiskFreeRate() {
+		return riskFreeRate;
+	}
+
+	public void setRiskFreeRate(double riskFreeRate) {
+		this.riskFreeRate = riskFreeRate;
+	}
 
 }
