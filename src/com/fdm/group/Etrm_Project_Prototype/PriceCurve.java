@@ -4,6 +4,13 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.TreeMap;
 
+
+
+/**
+ * Represents forward prices for different delivery dates
+ * Used for pricing futures contracts
+ */
+
 public class PriceCurve {
 
 	private final String commodity;
