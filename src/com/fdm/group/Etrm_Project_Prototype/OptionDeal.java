@@ -244,7 +244,7 @@ public abstract class OptionDeal extends DerivativeDeal {
 
 			return "IN_THE_MONEY";
 		} else if (Math.abs(currentFuturesPrice - strikePrice) < 0.01) {
-
+			
 			return "AT_THE_MONEY";
 		} else {
 
