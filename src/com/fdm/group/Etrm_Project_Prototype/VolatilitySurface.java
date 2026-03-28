@@ -1,23 +1,36 @@
 package com.fdm.group.Etrm_Project_Prototype;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Represents a simplified implied volatility surface for option pricing.
- * Volatility varies by strike price and time to expiration.
+ * Volatility varies by strike price and time to expiration. Represents a
+ * snapshot in time
  */
 
 public class VolatilitySurface {
 
 	private final String commodity;
+	// reference point = todays date
 	private final LocalDate valuationDate;
 	private final Map<VolatilityPoint, Double> calibratedPoints;
 
 	public VolatilitySurface(String commodity, LocalDate valuationDate) {
 
+		if (commodity == null) {
+
+			throw new NullPointerException("commodity cannot be null");
+
+		} else if (valuationDate == null) {
+
+			throw new NullPointerException("valuationDate must be a valid date");
+		}
 		this.commodity = commodity;
 		this.valuationDate = valuationDate;
 		calibratedPoints = new HashMap<>();
@@ -33,6 +46,10 @@ public class VolatilitySurface {
 		if (volatility < 0) {
 
 			throw new IllegalArgumentException("Volatility cannot be negative");
+
+		} else if (volatility >= 10.0) {
+
+			throw new IllegalArgumentException("Volatility cannot be greater than 10.0(1000%)");
 
 		}
 		VolatilityPoint volPoint = new VolatilityPoint(strike, expiry);
@@ -67,7 +84,8 @@ public class VolatilitySurface {
 		///20% default
 		///interpolation needs to be implemented
 		return interpolate(strike, expiry);
-		//return calibratedPoints.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.20);
+		// return
+		// calibratedPoints.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.20);
 
 	}
 
@@ -85,14 +103,21 @@ public class VolatilitySurface {
 	/**
 	 * Key for volatility surface lookup
 	 */
-
-	private static class VolatilityPoint {
+	public static class VolatilityPoint {
 
 		final double strike;
 		final LocalDate expiry;
 
 		VolatilityPoint(double strike, LocalDate expiry) {
 
+			if (strike <= 0) {
+
+				throw new IllegalArgumentException("Strike cannot be 0 or negative");
+
+			} else if (expiry == null) {
+
+				throw new NullPointerException("expiry must be a valid object");
+			}
 			this.strike = strike;
 			this.expiry = expiry;
 		}
@@ -127,6 +152,13 @@ public class VolatilitySurface {
 
 		}
 
+		@Override
+		public String toString() {
+
+			return String.format("VolatilityPoint[strike=%.2f, expiry=%s]", strike, expiry);
+
+		}
+
 	}
 
 	// === INTERPOLATION ===
@@ -143,41 +175,155 @@ public class VolatilitySurface {
 		VolatilityPoint higherStrikeAfter = null;
 
 		for (VolatilityPoint point : calibratedPoints.keySet()) {
-			// find the strikes below target
+
+			// Lower strike points (≤ target)
 			if (point.getStrike() <= strike) {
-				if (point.getExpiry().isBefore(expiry) || point.getExpiry().equals(expiry)) {
 
-					if (lowerStrikeBefore == null || point.getStrike() > lowerStrikeAfter.getStrike()) {
+				// Before or AT target expiry
+				if (!point.getExpiry().isAfter(expiry)) { // ← Changed!
+					if (lowerStrikeBefore == null || point.getStrike() > lowerStrikeBefore.getStrike()
+							|| (point.getStrike() == lowerStrikeBefore.getStrike()
+									&& point.getExpiry().isAfter(lowerStrikeBefore.getExpiry()))) {
+						lowerStrikeBefore = point;
 
-						lowerStrikeAfter = point;
-					}
-
-				}
-
-				if (point.getExpiry().isAfter(expiry) || point.getExpiry().equals(expiry)) {
-
-					if (lowerStrikeAfter == null || point.getStrike() > lowerStrikeAfter.getStrike()) {
-
-						lowerStrikeAfter = point;
 					}
 				}
-				
-				
 
-			}else {
-				
-				if(point.getExpiry().isBefore(expiry) || point.getExpiry().equals(expiry)){
-					
-					
-					
+				// After or AT target expiry
+				if (!point.getExpiry().isBefore(expiry)) { // ← Changed!
+					if (lowerStrikeAfter == null || point.getStrike() > lowerStrikeAfter.getStrike()
+							|| (point.getStrike() == lowerStrikeAfter.getStrike()
+									&& point.getExpiry().isAfter(lowerStrikeAfter.getExpiry()))) {
+						lowerStrikeAfter = point;
+
+					}
 				}
-				
-				
+			}
+
+			// Higher strike points (≥ target)
+			if (point.getStrike() >= strike) {
+
+				// Before or AT target expiry
+				if (!point.getExpiry().isAfter(expiry)) { // ← Changed!
+					if (higherStrikeBefore == null || point.getStrike() < higherStrikeBefore.getStrike()
+							|| (point.getStrike() == higherStrikeBefore.getStrike()
+									&& point.getExpiry().isAfter(higherStrikeBefore.getExpiry()))) {
+						higherStrikeBefore = point;
+
+					}
+				}
+
+				// After or AT target expiry
+				if (!point.getExpiry().isBefore(expiry)) { // ← Changed!
+					if (higherStrikeAfter == null || point.getStrike() < higherStrikeAfter.getStrike()
+							|| (point.getStrike() == higherStrikeAfter.getStrike()
+									&& point.getExpiry().isAfter(higherStrikeAfter.getExpiry()))) {
+						higherStrikeAfter = point;
+
+					}
+				}
 			}
 
 		}
-		return strike;
+		// Interpolation not possible cases
+		if (lowerStrikeBefore == null || lowerStrikeAfter == null || higherStrikeBefore == null
+				|| higherStrikeAfter == null) {
 
+			// need to implement findNearestVolatility
+			return findNearestVolatility(strike, expiry);
+		}
+
+		// grabbing implied volatility at these points in the hashmap
+		double vol11 = calibratedPoints.get(lowerStrikeBefore);
+		double vol12 = calibratedPoints.get(lowerStrikeAfter);
+		double vol21 = calibratedPoints.get(higherStrikeBefore);
+		double vol22 = calibratedPoints.get(higherStrikeAfter);
+
+		// get the strike for these points
+		double k1 = lowerStrikeBefore.getStrike();
+		double k2 = higherStrikeBefore.getStrike();
+		// time for these points
+		double t1 = ChronoUnit.DAYS.between(valuationDate, lowerStrikeBefore.getExpiry());
+		double t2 = ChronoUnit.DAYS.between(valuationDate, lowerStrikeAfter.getExpiry());
+		double t = ChronoUnit.DAYS.between(valuationDate, expiry);
+
+		// Perform interpolation in both dimensions
+
+		// interpolate in time
+
+		// vol for lower strike
+		double volLower = vol11 + (vol12 - vol11) * (t - t1) / (t2 - t1);
+
+		// vol for higher strike
+		double volHigher = vol21 + (vol22 - vol21) * (t - t1) / (t2 - t1);
+
+		// interpolate in Strike dimension
+		double finalVol = volLower + (volHigher - volLower) * (strike - k1) / (k2 - k1);
+
+		return finalVol;
+
+	}
+
+	/**
+	 * Find nearest calibrated volatility when interpolation is not possible
+	 */
+
+	private double findNearestVolatility(double strike, LocalDate expiry) {
+
+		// placeholder values
+		double minDistance = Double.MAX_VALUE;
+		VolatilityPoint nearest = null;
+
+		long targetDays = ChronoUnit.DAYS.between(valuationDate, expiry);
+
+		for (VolatilityPoint point : calibratedPoints.keySet()) {
+
+			long days = ChronoUnit.DAYS.between(valuationDate, point.getExpiry());
+
+			// Calculate Euclidean distance(weighted)
+
+			double strikeDiff = Math.abs(point.getStrike() - strike) / strike;// relative
+			double timeDiff = Math.abs(days - targetDays) / 365.0; // in years
+
+			double distance = Math.sqrt(strikeDiff * strikeDiff + timeDiff * timeDiff);
+
+			if (distance < minDistance) {
+
+				minDistance = distance;
+				nearest = point;
+			}
+
+		}
+
+		if (nearest == null) {
+
+			return 0.25;
+		}
+
+		return calibratedPoints.get(nearest);
+	}
+
+	// === UTILITY METHODS ===
+
+	public String getCommodity() {
+		return commodity;
+	}
+
+	public LocalDate getValuationDate() {
+		return valuationDate;
+	}
+
+	public Set<VolatilityPoint> getCalibrationPoints() {
+		return new HashSet<>(calibratedPoints.keySet());
+	}
+
+	public int size() {
+		return calibratedPoints.size();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("VolatilitySurface[%s, %d points]", commodity, calibratedPoints.size());
 	}
 
 }
