@@ -590,37 +590,70 @@ class VolatilitySurfaceTest {
     @DisplayName("Integration Tests")
     class IntegrationTests {
         
-        @Test
-        @DisplayName("Should handle complete workflow")
-        void testIntegration_CompleteWorkflow() {
-            // Arrange - build realistic surface
-            VolatilitySurface surface = new VolatilitySurface("CRUDE_OIL", valuationDate);
-            
-            // Add June expiry (3 months)
-            surface.addVolatility(80.0, LocalDate.of(2026, 6, 19), 0.30);
-            surface.addVolatility(90.0, LocalDate.of(2026, 6, 19), 0.26);
-            surface.addVolatility(100.0, LocalDate.of(2026, 6, 19), 0.25);
-            surface.addVolatility(110.0, LocalDate.of(2026, 6, 19), 0.27);
-            
-            // Add September expiry (6 months)
-            surface.addVolatility(80.0, LocalDate.of(2026, 9, 18), 0.28);
-            surface.addVolatility(90.0, LocalDate.of(2026, 9, 18), 0.25);
-            surface.addVolatility(100.0, LocalDate.of(2026, 9, 18), 0.24);
-            surface.addVolatility(110.0, LocalDate.of(2026, 9, 18), 0.25);
-            
-            // Act - various queries
-            double exactMatch = surface.getVolatility(100.0, LocalDate.of(2026, 6, 19));
-            double strikeInterp = surface.getVolatility(95.0, LocalDate.of(2026, 6, 19));
-            double timeInterp = surface.getVolatility(100.0, LocalDate.of(2026, 8, 1));
-            double bilinearInterp = surface.getVolatility(95.0, LocalDate.of(2026, 8, 1));
-            double nearestNeighbor = surface.getVolatility(120.0, LocalDate.of(2026, 12, 31));
-            
-            // Assert - all should return reasonable values
-            assertEquals(0.25, exactMatch, 0.0001);
-            assertTrue(strikeInterp >= 0.24 && strikeInterp <= 0.27);
-            assertTrue(timeInterp >= 0.24 && timeInterp <= 0.25);
-            assertTrue(bilinearInterp >= 0.24 && bilinearInterp <= 0.27);
-            assertNotNull(nearestNeighbor);
-        }
+    	 @Test
+    	    @DisplayName("Should handle complete workflow")
+    	    void testIntegration_CompleteWorkflow() {
+    	        // Arrange - build realistic surface
+    	        VolatilitySurface testSurface = new VolatilitySurface("CRUDE_OIL", valuationDate);
+    	        
+    	        // Add June expiry (3 months) - Volatility smile pattern
+    	        testSurface.addVolatility(80.0, LocalDate.of(2026, 6, 19), 0.30);
+    	        testSurface.addVolatility(90.0, LocalDate.of(2026, 6, 19), 0.26);
+    	        testSurface.addVolatility(100.0, LocalDate.of(2026, 6, 19), 0.25);  // ATM
+    	        testSurface.addVolatility(110.0, LocalDate.of(2026, 6, 19), 0.27);
+    	        
+    	        // Add September expiry (6 months) - Flatter smile
+    	        testSurface.addVolatility(80.0, LocalDate.of(2026, 9, 18), 0.28);
+    	        testSurface.addVolatility(90.0, LocalDate.of(2026, 9, 18), 0.25);
+    	        testSurface.addVolatility(100.0, LocalDate.of(2026, 9, 18), 0.24);  // ATM
+    	        testSurface.addVolatility(110.0, LocalDate.of(2026, 9, 18), 0.25);
+    	        
+    	        // Act - Test various query types
+    	        
+    	        // 1. Exact match (no interpolation)
+    	        double exactMatch = testSurface.getVolatility(100.0, LocalDate.of(2026, 6, 19));
+    	        System.out.println("exactMatch no interploation" + exactMatch);
+    	        
+    	        // 2. Strike interpolation only (same expiry)
+    	        double strikeInterp = testSurface.getVolatility(95.0, LocalDate.of(2026, 6, 19));
+    	        System.out.println("Strike interpolation only" + strikeInterp);
+    	        
+    	        // 3. Time interpolation only (same strike)
+    	        double timeInterp = testSurface.getVolatility(100.0, LocalDate.of(2026, 8, 1));
+    	        System.out.println("Time interpolation only" + timeInterp);
+    	        
+    	        // 4. Bilinear interpolation (both dimensions)
+    	        double bilinearInterp = testSurface.getVolatility(95.0, LocalDate.of(2026, 8, 1));
+    	        System.out.println("bilinear interpolation" + bilinearInterp);
+    	        
+    	        // 5. Nearest neighbor fallback (outside grid)
+    	        double nearestNeighbor = testSurface.getVolatility(120.0, LocalDate.of(2026, 12, 31));
+    	        System.out.println("Nearest neighbor fallback" + nearestNeighbor);
+    	        
+    	        // Assert - Verify each query type
+    	        
+    	        // Exact match should return exact value
+    	        assertEquals(0.25, exactMatch, 0.0001, 
+    	            "Exact match should return calibrated value");
+    	        
+    	        // Strike interpolation: between 90 (0.26) and 100 (0.25) at Jun
+    	        assertTrue(strikeInterp >= 0.25 && strikeInterp <= 0.26,
+    	            "Strike interp should be between 0.25 and 0.26, got: " + strikeInterp);
+    	        assertEquals(0.255, strikeInterp, 0.001,
+    	            "At strike 95 (midpoint), vol should be ~0.255");
+    	        
+    	        // Time interpolation: between Jun (0.25) and Sep (0.24) at strike 100
+    	        assertTrue(timeInterp >= 0.24 && timeInterp <= 0.25,
+    	            "Time interp should be between 0.24 and 0.25, got: " + timeInterp);
+    	        
+    	        // Bilinear: should be in overall range
+    	        assertTrue(bilinearInterp >= 0.24 && bilinearInterp <= 0.27,
+    	            "Bilinear interp should be in range [0.24, 0.27], got: " + bilinearInterp);
+    	        
+    	        // Nearest neighbor: should return one of the calibrated vols
+    	        assertNotNull(nearestNeighbor);
+    	        assertTrue(nearestNeighbor >= 0.24 && nearestNeighbor <= 0.30,
+    	            "Nearest neighbor should be within calibrated range, got: " + nearestNeighbor);
+    	    }
     }
 }

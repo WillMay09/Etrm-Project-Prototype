@@ -179,22 +179,25 @@ public class VolatilitySurface {
 			// Lower strike points (≤ target)
 			if (point.getStrike() <= strike) {
 
-				// Before or AT target expiry
-				if (!point.getExpiry().isAfter(expiry)) { // ← Changed!
+				// Before or AT target expiry - want Largest strike, latest expiry
+				if (!point.getExpiry().isAfter(expiry)) {
 					if (lowerStrikeBefore == null || point.getStrike() > lowerStrikeBefore.getStrike()
 							|| (point.getStrike() == lowerStrikeBefore.getStrike()
 									&& point.getExpiry().isAfter(lowerStrikeBefore.getExpiry()))) {
 						lowerStrikeBefore = point;
+						//System.out.println("lowerStrikeBefore" + point);
 
 					}
 				}
 
 				// After or AT target expiry
-				if (!point.getExpiry().isBefore(expiry)) { // ← Changed!
+				if (!point.getExpiry().isBefore(expiry)) { 
+					
 					if (lowerStrikeAfter == null || point.getStrike() > lowerStrikeAfter.getStrike()
 							|| (point.getStrike() == lowerStrikeAfter.getStrike()
 									&& point.getExpiry().isAfter(lowerStrikeAfter.getExpiry()))) {
 						lowerStrikeAfter = point;
+						//System.out.println("lowerStrikeAfter" + point);
 
 					}
 				}
@@ -203,28 +206,30 @@ public class VolatilitySurface {
 			// Higher strike points (≥ target)
 			if (point.getStrike() >= strike) {
 
-				// Before or AT target expiry
-				if (!point.getExpiry().isAfter(expiry)) { // ← Changed!
+				// Before or AT target expiry - want smallest strike, latest expiry
+				if (!point.getExpiry().isAfter(expiry)) 
 					if (higherStrikeBefore == null || point.getStrike() < higherStrikeBefore.getStrike()
 							|| (point.getStrike() == higherStrikeBefore.getStrike()
 									&& point.getExpiry().isAfter(higherStrikeBefore.getExpiry()))) {
 						higherStrikeBefore = point;
+						//System.out.println("higherStrikeBefore" + point);
 
 					}
 				}
 
 				// After or AT target expiry
-				if (!point.getExpiry().isBefore(expiry)) { // ← Changed!
+				if (!point.getExpiry().isBefore(expiry)) { 
 					if (higherStrikeAfter == null || point.getStrike() < higherStrikeAfter.getStrike()
 							|| (point.getStrike() == higherStrikeAfter.getStrike()
 									&& point.getExpiry().isAfter(higherStrikeAfter.getExpiry()))) {
 						higherStrikeAfter = point;
+						//System.out.println("higherStrikeAfter" + point);
 
 					}
 				}
 			}
 
-		}
+		
 		// Interpolation not possible cases
 		if (lowerStrikeBefore == null || lowerStrikeAfter == null || higherStrikeBefore == null
 				|| higherStrikeAfter == null) {
@@ -246,6 +251,28 @@ public class VolatilitySurface {
 		double t1 = ChronoUnit.DAYS.between(valuationDate, lowerStrikeBefore.getExpiry());
 		double t2 = ChronoUnit.DAYS.between(valuationDate, lowerStrikeAfter.getExpiry());
 		double t = ChronoUnit.DAYS.between(valuationDate, expiry);
+		
+		 // ========================================
+	    // CRITICAL: Handle Edge Case
+	    // ========================================
+		
+		//Case 1: Exact strike match(k1 == k2)
+		//All 4 corners at same strike -> only interpolate in time
+		if(k1 == k2) {
+			
+			return vol11 + (vol12 -vol11) * (t-t1) / (double)(t2 -t1);
+		}
+		//Case 2: Exact expiry match(t1 == t2)
+		// All 4 corners at same expiry → only interpolate in strike
+		if(t1 == t2) {
+			
+			return vol11 + (vol21 - vol11) * (strike - k1)/(k2 - k1);
+		}
+		
+		 // ========================================
+	    // Normal bilinear interpolation
+	    // ========================================
+		
 
 		// Perform interpolation in both dimensions
 
