@@ -2,6 +2,7 @@ package com.fdm.group.Etrm_Project_Prototype;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,12 +17,49 @@ import java.util.Set;
 
 public class VolatilitySurface {
 
+	/**Underlying commodity */
 	private final String commodity;
-	// reference point = todays date
+	
+	/** reference point = todays date - all time calculations are relative to this date*/
 	private final LocalDate valuationDate;
+	
+	/** Calibrated volatility points: (strike, expiry) -> implied volatility */
 	private final Map<VolatilityPoint, Double> calibratedPoints;
-	//private final Map<String, Object> metadata;
-
+	
+	
+	/** Optional metadata (e.g., data source, calibration time, interpolation type) */
+	private final Map<String, Object> metadata;
+	
+	// =========================================================================
+    // Constructors
+    // =========================================================================
+    
+    /**
+     * Constructor for Builder pattern (private)
+     * 
+     * @param builder Builder with all configuration
+     */
+	private VolatilitySurface(Builder builder) {
+		
+		this.commodity = builder.commodity;
+		this.valuationDate = builder.valuationDate;
+		
+		//immutable copies
+		this.calibratedPoints = Collections.unmodifiableMap(new HashMap<>(builder.calibratedPoints));
+		
+	}
+	
+	
+	
+	 /**
+     * Legacy constructor (deprecated - use Builder instead)
+     * 
+     * @param commodity Underlying commodity
+     * @param valuationDate Valuation date
+     * @deprecated Use {@link #builder()} instead for immutability and validation
+     */
+	
+	@Deprecated
 	public VolatilitySurface(String commodity, LocalDate valuationDate) {
 
 		if (commodity == null) {
@@ -35,9 +73,109 @@ public class VolatilitySurface {
 		this.commodity = commodity;
 		this.valuationDate = valuationDate;
 		calibratedPoints = new HashMap<>();
+		metadata = new HashMap<>();
 		
-
 	}
+	
+	 // =========================================================================
+    // Static Factory Method
+    // =========================================================================
+    
+    /**
+     * Creates a new Builder for constructing an immutable VolatilitySurface
+     * 
+     * @return New Builder instance
+     */
+	
+	
+	// =========================================================================
+    // Builder Pattern
+    // =========================================================================
+    
+    /**
+     * Builder for creating immutable VolatilitySurface instances
+     * 
+     * Provides fluent API for configuration and validates at build time.
+     */
+	
+	public static Builder builder() {
+		
+		return new Builder();
+	}
+	
+	
+	public static class Builder {
+		
+		private String commodity;
+		private LocalDate valuationDate;
+		private Map<VolatilityPoint, Double> calibratedPoints = new HashMap<>();
+		private Map<String, Object> metaData = new HashMap<>();
+		
+		/**
+         * Private constructor - use VolatilitySurface.builder()
+         */
+		
+		private Builder() {}
+		
+		/**
+         * Set the commodity
+         * 
+         * @param commodity Underlying commodity (e.g., "CRUDE_OIL")
+         * @return this Builder for chaining
+         */
+		public Builder commodity(String commodity) {
+			
+			this.commodity = commodity;
+			return this;
+		}
+		
+		
+		 /**
+         * Set the valuation date
+         * 
+         * @param valuationDate Date for which volatilities are valid
+         * @return this Builder for chaining
+         */
+		
+		public Builder valuationDate(LocalDate valuationDate) {
+			
+			this.valuationDate = valuationDate;
+			return this;
+		}
+		
+		
+		 /**
+         * Add a calibrated volatility point
+         * 
+         * @param strike Strike price
+         * @param expiry Expiry date
+         * @param volatility Implied volatility (annualized)
+         * @return this Builder for chaining
+         * @throws IllegalArgumentException if parameters are invalid
+         */
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	 // =========================================================================
+    // Old Methods
+    // =========================================================================
+    
+	
 
 	/**
 	 * Add volatility data point
