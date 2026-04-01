@@ -20,6 +20,7 @@ public class VolatilitySurface {
 	// reference point = todays date
 	private final LocalDate valuationDate;
 	private final Map<VolatilityPoint, Double> calibratedPoints;
+	//private final Map<String, Object> metadata;
 
 	public VolatilitySurface(String commodity, LocalDate valuationDate) {
 
@@ -34,6 +35,7 @@ public class VolatilitySurface {
 		this.commodity = commodity;
 		this.valuationDate = valuationDate;
 		calibratedPoints = new HashMap<>();
+		
 
 	}
 
