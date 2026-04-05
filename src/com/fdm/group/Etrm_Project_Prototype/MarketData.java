@@ -20,7 +20,7 @@ public interface MarketData {
 	
 	
 	//Historical data
-	LocalDateDoubleTimeSeries getTimeSeries(ObservableId id);
+	//LocalDateDoubleTimeSeries getTimeSeries(ObservableId id);
 	
 
 }
