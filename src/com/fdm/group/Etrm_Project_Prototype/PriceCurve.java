@@ -3,6 +3,7 @@ package com.fdm.group.Etrm_Project_Prototype;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -160,51 +161,48 @@ public class PriceCurve {
 			return this;
 
 		}
-		
-		
-		 /**
-         * Apply parallel shift to all prices
-         * 
-         * Useful for creating stress scenarios
-         * 
-         * @param shift Amount to add to each price
-         * @return this Builder for chaining
-         */
-		
+
+		/**
+		 * Apply parallel shift to all prices
+		 * 
+		 * Useful for creating stress scenarios
+		 * 
+		 * @param shift Amount to add to each price
+		 * @return this Builder for chaining
+		 */
+
 		public Builder paralleShift(double shift) {
-			
+
 			TreeMap<LocalDate, Double> shifted = new TreeMap<>();
-			for(var entry : prices.entrySet()) {
-				
+			for (var entry : prices.entrySet()) {
+
 				shifted.put(entry.getKey(), entry.getValue() + shift);
 			}
 			this.prices = shifted;
-			
+
 			return this;
 		}
-		
+
 		/**
-         * Apply percentage bump to all prices
-         * 
-         * @param percentage Percentage to bump (e.g., 0.10 for +10%)
-         * @return this Builder for chaining
-         */
-		
+		 * Apply percentage bump to all prices
+		 * 
+		 * @param percentage Percentage to bump (e.g., 0.10 for +10%)
+		 * @return this Builder for chaining
+		 */
+
 		public Builder percentageBump(double percentage) {
-			
+
 			TreeMap<LocalDate, Double> bumped = new TreeMap<>();
-			
-			for(var entry: prices.entrySet()) {
-				
-				bumped.put(entry.getKey(), entry.getValue()*(1 + percentage));
-				
-				
+
+			for (var entry : prices.entrySet()) {
+
+				bumped.put(entry.getKey(), entry.getValue() * (1 + percentage));
+
 			}
-			
+
 			this.prices = bumped;
 			return this;
 		}
-		
 
 		public PriceCurve build() {
 
@@ -228,54 +226,48 @@ public class PriceCurve {
 			return new PriceCurve(this);
 
 		}
-		
-		
 
-	    // =========================================================================
-	    // Scenario Creation Methods
-	    // =========================================================================
-	    
-		
+		// =========================================================================
+		// Scenario Creation Methods
+		// =========================================================================
+
 		/**
-	     * Create a new Builder initialized with this curve's data
-	     * 
-	     * Useful for creating scenario variations
-	     * 
-	     * @return Builder with this curve's configuration
-	     */
-		
+		 * Create a new Builder initialized with this curve's data
+		 * 
+		 * Useful for creating scenario variations
+		 * 
+		 * @return Builder with this curve's configuration
+		 */
+
 		public Builder toBuilder() {
-			
+
 			Builder builder = new Builder();
-			
+
 			builder.commodity = this.commodity;
 			builder.valuationDate = this.valuationDate;
-			
+
 			builder.prices = new TreeMap<>(this.prices);
-			
+
 			builder.metaData = new TreeMap<>(this.metaData);
-			
+
 			return builder;
 		}
-		
-		 /**
-	     * Create a curve with parallel shift applied
-	     * 
-	     * Example: curve.withParallelShift(5.0) adds $5 to every price
-	     * 
-	     * @param shift Amount to shift all prices (can be negative)
-	     * @return New curve with shifted prices
-	     */
-		
-		
+
+		/**
+		 * Create a curve with parallel shift applied
+		 * 
+		 * Example: curve.withParallelShift(5.0) adds $5 to every price
+		 * 
+		 * @param shift Amount to shift all prices (can be negative)
+		 * @return New curve with shifted prices
+		 */
+
 		public PriceCurve withParallelShift(double shift) {
-			
-			return toBuilder()
-					.paralleShift(shift)
-					.metadata("scenario", "Parallel shift " + (shift >= 0 ? "+" : "") + shift)
-		            .build();
+
+			return toBuilder().paralleShift(shift)
+					.metadata("scenario", "Parallel shift " + (shift >= 0 ? "+" : "") + shift).build();
 		}
-		
+
 		/**
 	     * Create a curve with percentage bump applied
 	     * 
@@ -289,7 +281,7 @@ public class PriceCurve {
 			
 			return toBuilder()
 					.percentageBump(percentage)
-					.metadata("scenario", "Bumped " + (percentage >= ? "+" : "") + (percentage * 100) + "%")
+					.metadata("scenario", "Bumped " + (percentage >= 0 ? "+" : "") + (percentage * 100) + "%")
 					.build();
 		
 		
@@ -297,52 +289,122 @@ public class PriceCurve {
 		
 
 	}
+		/**
+		 * Add a forward price point
+		 */
 
-	/**
-	 * Add a forward price point
-	 */
+		public void addPrice(LocalDate date, double price) {
 
-	public void addPrice(LocalDate date, double price) {
-
-		prices.put(date, price);
-	}
-
-	/**
-	 * Get price for specific date (with interpolation)
-	 */
-
-	public double getPrice(LocalDate targetDate) {
-
-		// Exact Match
-
-		if (prices.containsKey(targetDate)) {
-
-			return prices.get(targetDate);
-
+			prices.put(date, price);
 		}
 
-		// Find surrounding dates
+		  // =========================================================================
+	    // Main Price Retrieval Method
+	    // =========================================================================
+	    
+	    /**
+	     * Get forward price for a specific delivery date
+	     * 
+	     * Uses linear interpolation between calibrated points.
+	     * Uses nearest point for dates outside calibrated range.
+	     * 
+	     * Algorithm:
+	     * 1. Check for exact match
+	     * 2. Find dates before and after target
+	     * 3. If target before all dates: use earliest
+	     * 4. If target after all dates: use latest
+	     * 5. Otherwise: linear interpolation
+	     * 
+	     * @param deliveryDate Delivery date
+	     * @return Forward price
+	     * @throws NullPointerException if deliveryDate is null
+	     */
 
-		LocalDate before = prices.floorKey(targetDate);
-		LocalDate after = prices.ceilingKey(targetDate);
+		public double getPrice(LocalDate targetDate) {
+			
+			Objects.requireNonNull(targetDate, "Delivery date cannot be null");
+			
+			
+			// Exact Match
 
-		// Extrapolate if beyond range
-		double priceBefore = prices.get(before);
-		double priceAfter = prices.get(after);
+			if (prices.containsKey(targetDate)) {
 
-		long daysBefore = ChronoUnit.DAYS.between(before, targetDate);
+				return prices.get(targetDate);
 
-		long daysTotal = ChronoUnit.DAYS.between(before, after);
+			}
+			
+			//Find surrounding dates
+			LocalDate before = prices.floorKey(targetDate);
+			LocalDate after = prices.floorKey(targetDate);
 
-		double weight = (double) daysBefore / daysTotal;
+			// Find surrounding dates
+			if(before == null) {
+				
+				return prices.firstEntry().getValue();
+			}
+			if(after == null) {
+				
+				return prices.firstEntry().getValue();
+			}
+			
+			//Interpolation case
+			return interpolateLinear(targetDate, before, after);
 
-		return priceBefore + weight * (priceAfter - priceBefore);
+		}
+		
+		
+		/**
+	     * Linear interpolation between two dates
+	     * 
+	     * Formula: price = priceBefore + (priceAfter - priceBefore) * weight
+	     * where weight = (days from before to target) / (days from before to after)
+	     * 
+	     * Example:
+	     * Before: June 19 → $92
+	     * After:  Sept 18 → $90
+	     * Target: July 15
+	     * 
+	     * Days from June 19 to July 15: 26 days
+	     * Days from June 19 to Sept 18: 91 days
+	     * Weight: 26/91 = 0.286
+	     * Price: 92 + (90-92) * 0.286 = 92 - 0.57 = $91.43
+	     * 
+	     * @param target Target date
+	     * @param before Date before target
+	     * @param after Date after target
+	     * @return Interpolated price
+	     */
+		
+		private double interpolateLinear(LocalDate target, LocalDate before, LocalDate after) {
+			
+			double priceBefore = prices.get(before);
+			
+			double priceAfter = prices.get(after);
+			
+			long daysBefore = ChronoUnit.DAYS.between(before, target);
+			long daysTotal = ChronoUnit.DAYS.between(before, after);
+			
+			//Handle degenerate case(should not happen with TreeMap)
+			
+			if(daysTotal == 0) {
+				
+				return priceBefore;
+				
+			}
+			double weight = (double) daysBefore/ daysTotal;
+			return priceBefore + weight * (priceAfter- priceBefore);
+			
+		}
 
-	}
+		public String getCommodity() {
 
-	public String getCommodity() {
-
-		return commodity;
-	}
+			return commodity;
+		}
+		
+		
+		 // =========================================================================
+	    // Interpolation Logic
+	    // =========================================================================
+	    
 
 }
