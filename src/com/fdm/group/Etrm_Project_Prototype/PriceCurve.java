@@ -227,184 +227,246 @@ public class PriceCurve {
 
 		}
 
-		// =========================================================================
-		// Scenario Creation Methods
-		// =========================================================================
+	}
 
-		/**
-		 * Create a new Builder initialized with this curve's data
-		 * 
-		 * Useful for creating scenario variations
-		 * 
-		 * @return Builder with this curve's configuration
-		 */
+	// =========================================================================
+	// Scenario Creation Methods
+	// =========================================================================
 
-		public Builder toBuilder() {
+	/**
+	 * Create a new Builder initialized with this curve's data
+	 * 
+	 * Useful for creating scenario variations
+	 * 
+	 * @return Builder with this curve's configuration
+	 */
 
-			Builder builder = new Builder();
+	public Builder toBuilder() {
 
-			builder.commodity = this.commodity;
-			builder.valuationDate = this.valuationDate;
+		Builder builder = new Builder();
 
-			builder.prices = new TreeMap<>(this.prices);
+		builder.commodity = this.commodity;
+		builder.valuationDate = this.valuationDate;
 
-			builder.metaData = new TreeMap<>(this.metaData);
+		builder.prices = new TreeMap<>(this.prices);
 
-			return builder;
-		}
+		builder.metaData = new TreeMap<>(this.metaData);
 
-		/**
-		 * Create a curve with parallel shift applied
-		 * 
-		 * Example: curve.withParallelShift(5.0) adds $5 to every price
-		 * 
-		 * @param shift Amount to shift all prices (can be negative)
-		 * @return New curve with shifted prices
-		 */
+		return builder;
+	}
 
-		public PriceCurve withParallelShift(double shift) {
+	/**
+	 * Create a curve with parallel shift applied
+	 * 
+	 * Example: curve.withParallelShift(5.0) adds $5 to every price
+	 * 
+	 * @param shift Amount to shift all prices (can be negative)
+	 * @return New curve with shifted prices
+	 */
 
-			return toBuilder().paralleShift(shift)
-					.metadata("scenario", "Parallel shift " + (shift >= 0 ? "+" : "") + shift).build();
-		}
+	public PriceCurve withParallelShift(double shift) {
 
-		/**
-	     * Create a curve with percentage bump applied
-	     * 
-	     * Example: curve.withBump(0.10) increases all prices by 10%
-	     * 
-	     * @param percentage Percentage to bump (e.g., 0.10 for +10%)
-	     * @return New curve with bumped prices
-	     */
-		
-		public PriceCurve withBump(double percentage) {
-			
-			return toBuilder()
-					.percentageBump(percentage)
-					.metadata("scenario", "Bumped " + (percentage >= 0 ? "+" : "") + (percentage * 100) + "%")
-					.build();
-		
-		
-		
-		
+		return toBuilder().paralleShift(shift).metadata("scenario", "Parallel shift " + (shift >= 0 ? "+" : "") + shift)
+				.build();
+	}
+
+	/**
+	 * Create a curve with percentage bump applied
+	 * 
+	 * Example: curve.withBump(0.10) increases all prices by 10%
+	 * 
+	 * @param percentage Percentage to bump (e.g., 0.10 for +10%)
+	 * @return New curve with bumped prices
+	 */
+
+	public PriceCurve withBump(double percentage) {
+
+		return toBuilder().percentageBump(percentage)
+				.metadata("scenario", "Bumped " + (percentage >= 0 ? "+" : "") + (percentage * 100) + "%").build();
 
 	}
-		/**
-		 * Add a forward price point
-		 */
 
-		public void addPrice(LocalDate date, double price) {
+	/**
+	 * Create a curve with updated price at specific date
+	 * 
+	 * @param deliveryDate Delivery date
+	 * @param newPrice     New price
+	 * @return New curve with updated price
+	 */
 
-			prices.put(date, price);
-		}
+	public PriceCurve withPrice(LocalDate deliveryDate, double price) {
 
-		  // =========================================================================
-	    // Main Price Retrieval Method
-	    // =========================================================================
-	    
-	    /**
-	     * Get forward price for a specific delivery date
-	     * 
-	     * Uses linear interpolation between calibrated points.
-	     * Uses nearest point for dates outside calibrated range.
-	     * 
-	     * Algorithm:
-	     * 1. Check for exact match
-	     * 2. Find dates before and after target
-	     * 3. If target before all dates: use earliest
-	     * 4. If target after all dates: use latest
-	     * 5. Otherwise: linear interpolation
-	     * 
-	     * @param deliveryDate Delivery date
-	     * @return Forward price
-	     * @throws NullPointerException if deliveryDate is null
-	     */
+		return toBuilder().addPrice(deliveryDate, price).metadata("modfication", "Update Price at" + deliveryDate)
+				.build();
 
-		public double getPrice(LocalDate targetDate) {
-			
-			Objects.requireNonNull(targetDate, "Delivery date cannot be null");
-			
-			
-			// Exact Match
+	}
 
-			if (prices.containsKey(targetDate)) {
+	// =========================================================================
+	// Main Price Retrieval Method
+	// =========================================================================
 
-				return prices.get(targetDate);
+	/**
+	 * Get forward price for a specific delivery date
+	 * 
+	 * Uses linear interpolation between calibrated points. Uses nearest point for
+	 * dates outside calibrated range.
+	 * 
+	 * Algorithm: 1. Check for exact match 2. Find dates before and after target 3.
+	 * If target before all dates: use earliest 4. If target after all dates: use
+	 * latest 5. Otherwise: linear interpolation
+	 * 
+	 * @param deliveryDate Delivery date
+	 * @return Forward price
+	 * @throws NullPointerException if deliveryDate is null
+	 */
 
-			}
-			
-			//Find surrounding dates
-			LocalDate before = prices.floorKey(targetDate);
-			LocalDate after = prices.floorKey(targetDate);
+	public double getPrice(LocalDate targetDate) {
 
-			// Find surrounding dates
-			if(before == null) {
-				
-				return prices.firstEntry().getValue();
-			}
-			if(after == null) {
-				
-				return prices.firstEntry().getValue();
-			}
-			
-			//Interpolation case
-			return interpolateLinear(targetDate, before, after);
+		Objects.requireNonNull(targetDate, "Delivery date cannot be null");
+
+		// Exact Match
+
+		if (prices.containsKey(targetDate)) {
+
+			return prices.get(targetDate);
 
 		}
-		
-		
-		/**
-	     * Linear interpolation between two dates
-	     * 
-	     * Formula: price = priceBefore + (priceAfter - priceBefore) * weight
-	     * where weight = (days from before to target) / (days from before to after)
-	     * 
-	     * Example:
-	     * Before: June 19 → $92
-	     * After:  Sept 18 → $90
-	     * Target: July 15
-	     * 
-	     * Days from June 19 to July 15: 26 days
-	     * Days from June 19 to Sept 18: 91 days
-	     * Weight: 26/91 = 0.286
-	     * Price: 92 + (90-92) * 0.286 = 92 - 0.57 = $91.43
-	     * 
-	     * @param target Target date
-	     * @param before Date before target
-	     * @param after Date after target
-	     * @return Interpolated price
-	     */
-		
-		private double interpolateLinear(LocalDate target, LocalDate before, LocalDate after) {
-			
-			double priceBefore = prices.get(before);
-			
-			double priceAfter = prices.get(after);
-			
-			long daysBefore = ChronoUnit.DAYS.between(before, target);
-			long daysTotal = ChronoUnit.DAYS.between(before, after);
-			
-			//Handle degenerate case(should not happen with TreeMap)
-			
-			if(daysTotal == 0) {
-				
-				return priceBefore;
-				
-			}
-			double weight = (double) daysBefore/ daysTotal;
-			return priceBefore + weight * (priceAfter- priceBefore);
-			
+
+		// Find surrounding dates
+		LocalDate before = prices.floorKey(targetDate);
+		LocalDate after = prices.floorKey(targetDate);
+
+		// Find surrounding dates
+		if (before == null) {
+
+			return prices.firstEntry().getValue();
+		}
+		if (after == null) {
+
+			return prices.firstEntry().getValue();
 		}
 
-		public String getCommodity() {
+		// Interpolation case
+		return interpolateLinear(targetDate, before, after);
 
-			return commodity;
+	}
+
+	/**
+	 * Linear interpolation between two dates
+	 * 
+	 * Formula: price = priceBefore + (priceAfter - priceBefore) * weight where
+	 * weight = (days from before to target) / (days from before to after)
+	 * 
+	 * Example: Before: June 19 → $92 After: Sept 18 → $90 Target: July 15
+	 * 
+	 * Days from June 19 to July 15: 26 days Days from June 19 to Sept 18: 91 days
+	 * Weight: 26/91 = 0.286 Price: 92 + (90-92) * 0.286 = 92 - 0.57 = $91.43
+	 * 
+	 * @param target Target date
+	 * @param before Date before target
+	 * @param after  Date after target
+	 * @return Interpolated price
+	 */
+
+	// =========================================================================
+	// Interpolation Logic
+	// =========================================================================
+
+	private double interpolateLinear(LocalDate target, LocalDate before, LocalDate after) {
+
+		double priceBefore = prices.get(before);
+
+		double priceAfter = prices.get(after);
+
+		long daysBefore = ChronoUnit.DAYS.between(before, target);
+		long daysTotal = ChronoUnit.DAYS.between(before, after);
+
+		// Handle degenerate case(should not happen with TreeMap)
+
+		if (daysTotal == 0) {
+
+			return priceBefore;
+
 		}
-		
-		
-		 // =========================================================================
-	    // Interpolation Logic
-	    // =========================================================================
-	    
+		double weight = (double) daysBefore / daysTotal;
+		return priceBefore + weight * (priceAfter - priceBefore);
+
+	}
+
+	// =========================================================================
+	// Getters
+	// =========================================================================
+	public String getCommodity() {
+
+		return commodity;
+	}
+
+	public LocalDate getValuationDate() {
+
+		return valuationDate;
+	}
+
+	public int size() {
+
+		return prices.size();
+	}
+
+	/**
+	 * Get metadata value
+	 * 
+	 * @param <T>  Expected type
+	 * @param key  Metadata key
+	 * @param type Expected class
+	 * @return Metadata value or null if not found
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T getMetadata(String key, Class<T> type) {
+		Object value = metaData.get(key);
+		return value != null ? (T) value : null;
+	}
+
+	/**
+	 * Get all metadata (defensive copy)
+	 * 
+	 * @return Unmodifiable map of metadata
+	 */
+
+	public TreeMap<String, Object> getAllMetaData() {
+
+		return new TreeMap<>(metaData);
+	}
+
+	/**
+	 * Get all calibrated prices (defensive copy)
+	 * 
+	 * @return Unmodifiable map of prices
+	 */
+
+	public TreeMap<LocalDate, Double> getAllPrices() {
+
+		return new TreeMap<>(prices);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("PriceCurve[commodity=%s, valuationDate=%s, points=%d]", commodity, valuationDate,
+				prices.size());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		PriceCurve that = (PriceCurve) o;
+		return Objects.equals(commodity, that.commodity) && Objects.equals(valuationDate, that.valuationDate)
+				&& Objects.equals(prices, that.prices);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(commodity, valuationDate, prices);
+	}
 
 }
