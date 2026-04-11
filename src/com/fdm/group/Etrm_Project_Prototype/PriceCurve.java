@@ -336,8 +336,8 @@ public class PriceCurve {
 		// Find surrounding dates
 		LocalDate before = prices.floorKey(targetDate);
 		LocalDate after = prices.ceilingKey(targetDate);
-		System.out.println(before);
-		System.out.println(after);
+		//System.out.println(before);
+		//System.out.println(after);
 
 		// Find surrounding dates
 		if (before == null) {
@@ -384,8 +384,8 @@ public class PriceCurve {
 		long daysBefore = ChronoUnit.DAYS.between(before, target);
 		long daysTotal = ChronoUnit.DAYS.between(before, after);
 		
-		System.out.println("daysBefore: " + daysBefore);
-		System.out.println("daysTotal: " + daysTotal);
+		//System.out.println("daysBefore: " + daysBefore);
+		//System.out.println("daysTotal: " + daysTotal);
 		
 		
 
@@ -399,7 +399,7 @@ public class PriceCurve {
 		
 		double weight = (double) daysBefore / daysTotal;
 		
-		System.out.println("Weight: " + weight);
+		//System.out.println("Weight: " + weight);
 		return priceBefore + weight * (priceAfter - priceBefore);
 
 	}
