@@ -3,6 +3,7 @@ package com.fdm.group.Etrm_Project_Prototype;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -334,7 +335,9 @@ public class PriceCurve {
 
 		// Find surrounding dates
 		LocalDate before = prices.floorKey(targetDate);
-		LocalDate after = prices.floorKey(targetDate);
+		LocalDate after = prices.ceilingKey(targetDate);
+		System.out.println(before);
+		System.out.println(after);
 
 		// Find surrounding dates
 		if (before == null) {
@@ -343,7 +346,7 @@ public class PriceCurve {
 		}
 		if (after == null) {
 
-			return prices.firstEntry().getValue();
+			return prices.lastEntry().getValue();
 		}
 
 		// Interpolation case
@@ -380,6 +383,11 @@ public class PriceCurve {
 
 		long daysBefore = ChronoUnit.DAYS.between(before, target);
 		long daysTotal = ChronoUnit.DAYS.between(before, after);
+		
+		System.out.println("daysBefore: " + daysBefore);
+		System.out.println("daysTotal: " + daysTotal);
+		
+		
 
 		// Handle degenerate case(should not happen with TreeMap)
 
@@ -388,7 +396,10 @@ public class PriceCurve {
 			return priceBefore;
 
 		}
+		
 		double weight = (double) daysBefore / daysTotal;
+		
+		System.out.println("Weight: " + weight);
 		return priceBefore + weight * (priceAfter - priceBefore);
 
 	}
@@ -431,9 +442,9 @@ public class PriceCurve {
 	 * @return Unmodifiable map of metadata
 	 */
 
-	public TreeMap<String, Object> getAllMetaData() {
+	public Map<String, Object> getAllMetaData() {
 
-		return new TreeMap<>(metaData);
+		return Collections.unmodifiableMap(new TreeMap<>(metaData));
 	}
 
 	/**
@@ -442,9 +453,9 @@ public class PriceCurve {
 	 * @return Unmodifiable map of prices
 	 */
 
-	public TreeMap<LocalDate, Double> getAllPrices() {
+	public Map<LocalDate, Double> getAllPrices() {
 
-		return new TreeMap<>(prices);
+		return Collections.unmodifiableMap(new TreeMap<>(prices));
 	}
 
 	@Override

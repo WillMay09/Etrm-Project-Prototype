@@ -191,7 +191,7 @@ class PriceCurveTest {
         }
         
         @Test
-        @DisplayName("Should create defensive copy of prices")
+        @DisplayName("Prices should be unmodifiable")
         void testDefensiveCopy_Prices() {
             PriceCurve curve = PriceCurve.builder()
                 .commodity("CRUDE_OIL")
@@ -209,7 +209,7 @@ class PriceCurveTest {
         }
         
         @Test
-        @DisplayName("Should create defensive copy of metadata")
+        @DisplayName("Metadata should be unmodifiable")
         void testDefensiveCopy_Metadata() {
             PriceCurve curve = PriceCurve.builder()
                 .commodity("CRUDE_OIL")
@@ -433,6 +433,7 @@ class PriceCurveTest {
                 .addPrice(september, 90.0)
                 .build();
             
+            System.out.println("Latest price test");
             // January 2027 is after September
             LocalDate january2027 = LocalDate.of(2027, 1, 15);
             double price = curve.getPrice(january2027);
@@ -539,6 +540,8 @@ class PriceCurveTest {
             LocalDate year1 = LocalDate.of(2026, 6, 19);
             LocalDate year5 = LocalDate.of(2030, 6, 19);  // 4 years later
             
+            System.out.println("Test Case: Large time span difference");
+            
             PriceCurve curve = PriceCurve.builder()
                 .commodity("CRUDE_OIL")
                 .valuationDate(valuationDate)
@@ -606,7 +609,7 @@ class PriceCurveTest {
                 .metadata("curveType", "FORWARD")
                 .build();
             
-            assertEquals(3, curve.getAllMetadata().size());
+            assertEquals(3, curve.getAllMetaData().size());
         }
     }
     
