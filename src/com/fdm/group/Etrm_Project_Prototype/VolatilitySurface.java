@@ -56,7 +56,6 @@ public class VolatilitySurface {
 	 * @param valuationDate Valuation date
 	 * @deprecated Use {@link #builder()} instead for immutability and validation
 	 */
-
 	@Deprecated
 	public VolatilitySurface(String commodity, LocalDate valuationDate) {
 

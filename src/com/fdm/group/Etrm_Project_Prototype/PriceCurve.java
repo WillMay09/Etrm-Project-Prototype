@@ -144,7 +144,6 @@ public class PriceCurve {
 
 			prices.put(deliveryDate, price);
 			return this;
-
 		}
 
 		/**
@@ -162,7 +161,6 @@ public class PriceCurve {
 			return this;
 
 		}
-
 		/**
 		 * Apply parallel shift to all prices
 		 * 
@@ -183,7 +181,6 @@ public class PriceCurve {
 
 			return this;
 		}
-
 		/**
 		 * Apply percentage bump to all prices
 		 * 
@@ -204,7 +201,6 @@ public class PriceCurve {
 			this.prices = bumped;
 			return this;
 		}
-
 		public PriceCurve build() {
 
 			if (commodity == null || commodity.trim().isEmpty()) {
@@ -225,9 +221,7 @@ public class PriceCurve {
 
 			}
 			return new PriceCurve(this);
-
 		}
-
 	}
 
 	// =========================================================================
@@ -299,9 +293,7 @@ public class PriceCurve {
 
 		return toBuilder().addPrice(deliveryDate, price).metadata("modfication", "Update Price at" + deliveryDate)
 				.build();
-
 	}
-
 	// =========================================================================
 	// Main Price Retrieval Method
 	// =========================================================================
@@ -326,7 +318,6 @@ public class PriceCurve {
 		Objects.requireNonNull(targetDate, "Delivery date cannot be null");
 
 		// Exact Match
-
 		if (prices.containsKey(targetDate)) {
 
 			return prices.get(targetDate);
@@ -348,7 +339,6 @@ public class PriceCurve {
 
 			return prices.lastEntry().getValue();
 		}
-
 		// Interpolation case
 		return interpolateLinear(targetDate, before, after);
 
@@ -387,8 +377,6 @@ public class PriceCurve {
 		//System.out.println("daysBefore: " + daysBefore);
 		//System.out.println("daysTotal: " + daysTotal);
 		
-		
-
 		// Handle degenerate case(should not happen with TreeMap)
 
 		if (daysTotal == 0) {

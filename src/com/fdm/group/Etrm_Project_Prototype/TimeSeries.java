@@ -33,16 +33,13 @@ public class TimeSeries {
 
 		return new TimeSeries();
 	}
-
 	/**
 	 * Add data point
 	 */
-
 	public void addPoint(LocalDate date, double value) {
 
 		data.put(date, value);
 	}
-
 	/**
 	 * Retrieves price at a specific date
 	 */
@@ -68,12 +65,20 @@ public class TimeSeries {
 		return new ArrayList<>(data.subMap(startDate, true, endDate, true).values());
 
 	}
+	
+	/**
+	 * Return size of historical prices map
+	 */
+	
+	public int size() {
+		
+		return data.size();
+	}
 
 	/**
 	 * Calculate historical volatility Returns annualized standard deviation of
 	 * returns
 	 */
-
 	public double calculateVolatility(int periods) {
 
 		if (data.size() < periods + 1) {
@@ -93,10 +98,8 @@ public class TimeSeries {
 			returns.add(ret);
 
 		}
-
 		// calculate mean
 		double mean = returns.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-
 		// calculate variance
 		double variance = returns.stream().mapToDouble(r -> Math.pow(r - mean, 2)).average().orElse(0.0);
 
