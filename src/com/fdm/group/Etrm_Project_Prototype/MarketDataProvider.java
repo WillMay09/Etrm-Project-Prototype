@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +22,6 @@ public class MarketDataProvider {
 
 	/** Volatility surfaces by commodity */
 	private final Map<String, VolatilitySurface> volatilitySurfaces;
-
 	/** Historical price time series by commodity */
 
 	private final Map<String, TimeSeries> historicalData;
@@ -133,6 +133,14 @@ public class MarketDataProvider {
 		return historicalData.get(commodity);
 	}
 
+	public OptionalDouble getHistoricalPrice(String commodity, LocalDate date) {
+		
+		TimeSeries historicalData = getHistoricalData(commodity);
+		
+		return historicalData.getValue(date);
+		
+		
+	}
 	// =========================================================================
 	// Convenience Methods
 	// =========================================================================

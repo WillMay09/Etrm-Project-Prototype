@@ -56,8 +56,7 @@ class TimeSeriesIntegrationTest {
         // Verify can also calculate different time windows
         TimeSeries last90Days = series.tailSeries(90);
         double vol90 = last90Days.calculateVolatility(89);
-        
-        assertNotEquals(volatility, vol90, "Different time windows should give different volatility");
+         assertNotEquals(volatility, vol90, "Different time windows should give different volatility");
     }
     
     @Test

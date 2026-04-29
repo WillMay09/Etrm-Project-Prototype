@@ -3,13 +3,13 @@ package com.fdm.group.Etrm_Project_Prototype;
 import static org.junit.jupiter.api.Assertions.*;
  
 import java.time.LocalDate;
+import java.util.OptionalDouble;
 import java.util.Set;
  
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import com.fdm.group.Etrm_Project_Prototype.MarketDataProvider;
  
 /**
  * Comprehensive unit tests for MarketDataProvider
@@ -19,10 +19,11 @@ import com.fdm.group.Etrm_Project_Prototype.MarketDataProvider;
  * - Spot prices
  * - Forward curves
  * - Volatility surfaces
- * - Historical data
+ * - Historical data (TimeSeries)
  * - Metadata
  * - Scenario creation (toBuilder)
  * - Multi-commodity support
+ * - Immutability
  */
 @DisplayName("MarketDataProvider Unit Tests")
 class MarketDataProviderTest {
@@ -55,13 +56,13 @@ class MarketDataProviderTest {
             .addVolatility(95.0, LocalDate.of(2026, 9, 18), 0.24)  // OTM call, far-term
             .build();
         
-        // Setup sample historical data (commented out - TimeSeries not fully implemented)
-//        crudeHistory = TimeSeries.builder()
-//            .commodity("CRUDE_OIL")
-//            .addObservation(LocalDate.of(2026, 3, 1), 88.0)
-//            .addObservation(LocalDate.of(2026, 3, 15), 90.0)
-//            .addObservation(LocalDate.of(2026, 3, 20), 91.0)
-//            .build();
+        // Setup sample historical data
+        crudeHistory = TimeSeries.builder()
+            .commodity("CRUDE_OIL")
+            .addPoint(LocalDate.of(2026, 3, 1), 88.0)
+            .addPoint(LocalDate.of(2026, 3, 15), 90.0)
+            .addPoint(LocalDate.of(2026, 3, 20), 91.0)
+            .createTimeSeries();
     }
     
     // =========================================================================
@@ -130,13 +131,12 @@ class MarketDataProviderTest {
         @Test
         @DisplayName("Should accept historical data only")
         void testBuild_HistoricalDataOnly() {
-            // Commented out - TimeSeries not fully implemented
-//            assertDoesNotThrow(() -> {
-//                MarketDataProvider.builder()
-//                    .valuationDate(valuationDate)
-//                    .addHistoricalData("CRUDE_OIL", crudeHistory)
-//                    .build();
-//            }, "Should accept historical data only");
+            assertDoesNotThrow(() -> {
+                MarketDataProvider.builder()
+                    .valuationDate(valuationDate)
+                    .addHistoricalData("CRUDE_OIL", crudeHistory)
+                    .build();
+            }, "Should accept historical data only");
         }
         
         @Test
@@ -182,12 +182,11 @@ class MarketDataProviderTest {
         @Test
         @DisplayName("Should throw if time series is null")
         void testAddHistoricalData_Null() {
-            // Commented out - TimeSeries not fully implemented
-//            assertThrows(NullPointerException.class, () -> {
-//                MarketDataProvider.builder()
-//                    .valuationDate(valuationDate)
-//                    .addHistoricalData("CRUDE_OIL", null);  // null time series!
-//            }, "Should throw NullPointerException for null time series");
+            assertThrows(NullPointerException.class, () -> {
+                MarketDataProvider.builder()
+                    .valuationDate(valuationDate)
+                    .addHistoricalData("CRUDE_OIL", null);  // null time series!
+            }, "Should throw NullPointerException for null time series");
         }
     }
     
@@ -409,54 +408,122 @@ class MarketDataProviderTest {
     }
     
     // =========================================================================
-    // Historical Data Tests
+    // Historical Data Tests (TimeSeries)
     // =========================================================================
     
     @Nested
     @DisplayName("Historical Data Tests")
     class HistoricalDataTests {
         
-        // Commented out - TimeSeries not fully implemented
-//        @Test
-//        @DisplayName("Should store and retrieve historical data")
-//        void testHistoricalData_StoreAndRetrieve() {
-//            MarketDataProvider marketData = MarketDataProvider.builder()
-//                .valuationDate(valuationDate)
-//                .addHistoricalData("CRUDE_OIL", crudeHistory)
-//                .build();
-//            
-//            TimeSeries retrieved = marketData.getHistoricalData("CRUDE_OIL");
-//            
-//            assertNotNull(retrieved);
-//            assertEquals("CRUDE_OIL", retrieved.getCommodity());
-//            assertEquals(3, retrieved.size());
-//        }
+        @Test
+        @DisplayName("Should store and retrieve historical data")
+        void testHistoricalData_StoreAndRetrieve() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            TimeSeries retrieved = marketData.getHistoricalData("CRUDE_OIL");
+            
+            assertNotNull(retrieved);
+            assertEquals(3, retrieved.size());
+        }
         
         @Test
         @DisplayName("Should throw if historical data not found")
         void testHistoricalData_NotFound() {
-            // Commented out - TimeSeries not fully implemented
-//            MarketDataProvider marketData = MarketDataProvider.builder()
-//                .valuationDate(valuationDate)
-//                .addHistoricalData("CRUDE_OIL", crudeHistory)
-//                .build();
-//            
-//            assertThrows(IllegalArgumentException.class, () -> {
-//                marketData.getHistoricalData("NATURAL_GAS");  // Not added!
-//            }, "Should throw IllegalArgumentException for missing data");
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            assertThrows(IllegalArgumentException.class, () -> {
+                marketData.getHistoricalData("NATURAL_GAS");  // Not added!
+            }, "Should throw IllegalArgumentException for missing data");
         }
         
         @Test
         @DisplayName("Should check if historical data exists")
         void testHasHistoricalData() {
-            // Commented out - TimeSeries not fully implemented
-//            MarketDataProvider marketData = MarketDataProvider.builder()
-//                .valuationDate(valuationDate)
-//                .addHistoricalData("CRUDE_OIL", crudeHistory)
-//                .build();
-//            
-//            assertTrue(marketData.hasHistoricalData("CRUDE_OIL"));
-//            assertFalse(marketData.hasHistoricalData("NATURAL_GAS"));
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            assertTrue(marketData.hasHistoricalData("CRUDE_OIL"));
+            assertFalse(marketData.hasHistoricalData("NATURAL_GAS"));
+        }
+        
+        @Test
+        @DisplayName("Should retrieve specific historical price")
+        void testGetHistoricalPrice() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            OptionalDouble price = marketData.getHistoricalPrice("CRUDE_OIL", LocalDate.of(2026, 3, 15));
+            
+            assertTrue(price.isPresent(), "Price should be present for this date");
+            assertEquals(90.0, price.getAsDouble(), 0.0001);
+        }
+        
+        @Test
+        @DisplayName("Should return empty when historical price not found for date")
+        void testGetHistoricalPrice_DateNotFound() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            OptionalDouble price = marketData.getHistoricalPrice("CRUDE_OIL", LocalDate.of(2026, 3, 10));
+            
+            assertFalse(price.isPresent(), "Price should not be present for missing date");
+        }
+        
+        @Test
+        @DisplayName("Should throw when commodity has no historical data")
+        void testGetHistoricalPrice_CommodityNotFound() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            assertThrows(IllegalArgumentException.class, () -> {
+                marketData.getHistoricalPrice("NATURAL_GAS", LocalDate.of(2026, 3, 15));
+            }, "Should throw when commodity has no historical data");
+        }
+        
+        @Test
+        @DisplayName("Should get earliest and latest historical dates")
+        void testHistoricalData_EarliestLatest() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            TimeSeries history = marketData.getHistoricalData("CRUDE_OIL");
+            
+            assertEquals(LocalDate.of(2026, 3, 1), history.getEarliestDate());
+            assertEquals(LocalDate.of(2026, 3, 20), history.getLatestDate());
+        }
+        
+        @Test
+        @DisplayName("Should calculate statistics from historical data")
+        void testHistoricalData_Statistics() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            TimeSeries history = marketData.getHistoricalData("CRUDE_OIL");
+            
+            // Mean: (88 + 90 + 91) / 3 = 89.67
+            assertEquals(89.67, history.meanValue(), 0.01);
+            
+            // Min and max
+            assertEquals(88.0, history.minValue(), 0.01);
+            assertEquals(91.0, history.maxValue(), 0.01);
         }
     }
     
@@ -603,17 +670,20 @@ class MarketDataProviderTest {
                 .addSpotPrice("NATURAL_GAS", 3.50)
                 .addForwardCurve("CRUDE_OIL", crudeCurve)
                 .addVolatilitySurface("CRUDE_OIL", crudeVol)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
                 .build();
             
             // Crude: has everything
             assertTrue(marketData.hasSpotPrice("CRUDE_OIL"));
             assertTrue(marketData.hasForwardCurve("CRUDE_OIL"));
             assertTrue(marketData.hasVolatilitySurface("CRUDE_OIL"));
+            assertTrue(marketData.hasHistoricalData("CRUDE_OIL"));
             
             // Gas: only has spot
             assertTrue(marketData.hasSpotPrice("NATURAL_GAS"));
             assertFalse(marketData.hasForwardCurve("NATURAL_GAS"));
             assertFalse(marketData.hasVolatilitySurface("NATURAL_GAS"));
+            assertFalse(marketData.hasHistoricalData("NATURAL_GAS"));
         }
     }
     
@@ -705,6 +775,34 @@ class MarketDataProviderTest {
             assertTrue(expanded.hasSpotPrice("CRUDE_OIL"));
             assertTrue(expanded.hasSpotPrice("NATURAL_GAS"));
         }
+        
+        @Test
+        @DisplayName("Should modify historical data via toBuilder()")
+        void testToBuilder_ModifyHistoricalData() {
+            MarketDataProvider original = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            // Create new history with additional point
+            TimeSeries extendedHistory = TimeSeries.builder()
+                .commodity("CRUDE_OIL")
+                .addPoint(LocalDate.of(2026, 3, 1), 88.0)
+                .addPoint(LocalDate.of(2026, 3, 15), 90.0)
+                .addPoint(LocalDate.of(2026, 3, 20), 91.0)
+                .addPoint(LocalDate.of(2026, 3, 21), 92.0)  // New!
+                .createTimeSeries();
+            
+            MarketDataProvider updated = original.toBuilder()
+                .addHistoricalData("CRUDE_OIL", extendedHistory)
+                .build();
+            
+            // Original: 3 points
+            assertEquals(3, original.getHistoricalData("CRUDE_OIL").size());
+            
+            // Updated: 4 points
+            assertEquals(4, updated.getHistoricalData("CRUDE_OIL").size());
+        }
     }
     
     // =========================================================================
@@ -748,6 +846,22 @@ class MarketDataProviderTest {
                 metadata.put("newKey", "newValue");
             });
         }
+        
+        @Test
+        @DisplayName("Should return unmodifiable commodity set")
+        void testUnmodifiableCommodities() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addSpotPrice("CRUDE_OIL", 91.5)
+                .build();
+            
+            Set<String> commodities = marketData.getCommodities();
+            
+            // Try to modify (should throw)
+            assertThrows(UnsupportedOperationException.class, () -> {
+                commodities.add("NATURAL_GAS");
+            });
+        }
     }
     
     // =========================================================================
@@ -766,6 +880,7 @@ class MarketDataProviderTest {
                 .addSpotPrice("CRUDE_OIL", 91.5)
                 .addForwardCurve("CRUDE_OIL", crudeCurve)
                 .addVolatilitySurface("CRUDE_OIL", crudeVol)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
                 .build();
             
             String str = marketData.toString();
@@ -784,6 +899,93 @@ class MarketDataProviderTest {
                 .build();
             
             assertEquals(valuationDate, marketData.getValuationDate());
+        }
+    }
+    
+    // =========================================================================
+    // Integration Tests with TimeSeries
+    // =========================================================================
+    
+    @Nested
+    @DisplayName("TimeSeries Integration Tests")
+    class TimeSeriesIntegrationTests {
+        
+        @Test
+        @DisplayName("Should calculate volatility from historical data")
+        void testCalculateVolatility() {
+            // Build larger historical dataset for volatility
+            TimeSeries.Builder builder = TimeSeries.builder().commodity("CRUDE_OIL");
+            
+            LocalDate start = LocalDate.of(2026, 1, 2);
+            double[] prices = {85.0, 86.0, 84.5, 87.0, 85.5, 88.0, 86.5, 87.5, 86.0, 89.0};
+            
+            for (int i = 0; i < prices.length; i++) {
+                builder.addPoint(start.plusDays(i), prices[i]);
+            }
+            
+            TimeSeries history = builder.createTimeSeries();
+            
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", history)
+                .build();
+            
+            // Calculate volatility from historical data
+            TimeSeries retrieved = marketData.getHistoricalData("CRUDE_OIL");
+            double vol = retrieved.calculateVolatility(9);  // 9 returns from 10 prices
+            
+            assertTrue(vol > 0, "Volatility should be positive");
+            assertTrue(vol < 1.0, "Annualized volatility should be reasonable");
+        }
+        
+        @Test
+        @DisplayName("Should use historical data for P&L calculation")
+        void testPnLFromHistoricalData() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            TimeSeries history = marketData.getHistoricalData("CRUDE_OIL");
+            
+            // Calculate P&L: Today vs Yesterday
+            // Position: Long 100,000 barrels
+            double position = 100_000;
+            
+            double today = history.getValue(LocalDate.of(2026, 3, 20)).getAsDouble();    // 91.0
+            double yesterday = history.getValue(LocalDate.of(2026, 3, 15)).getAsDouble(); // 90.0
+            
+            double pnl = (today - yesterday) * position;
+            
+            // $1/barrel × 100k barrels = $100,000 profit
+            assertEquals(100_000, pnl, 0.01);
+        }
+        
+        @Test
+        @DisplayName("Should combine spot, forward, and historical data")
+        void testCombinedMarketData() {
+            MarketDataProvider marketData = MarketDataProvider.builder()
+                .valuationDate(valuationDate)
+                .addSpotPrice("CRUDE_OIL", 91.5)
+                .addForwardCurve("CRUDE_OIL", crudeCurve)
+                .addHistoricalData("CRUDE_OIL", crudeHistory)
+                .build();
+            
+            // Spot price
+            assertEquals(91.5, marketData.getSpotPrice("CRUDE_OIL"), 0.01);
+            
+            // Forward price
+            assertEquals(92.0, marketData.getForwardPrice("CRUDE_OIL", LocalDate.of(2026, 6, 19)), 0.01);
+            
+            // Historical price
+            OptionalDouble historicalPrice = marketData.getHistoricalPrice("CRUDE_OIL", LocalDate.of(2026, 3, 15));
+            assertTrue(historicalPrice.isPresent());
+            assertEquals(90.0, historicalPrice.getAsDouble(), 0.01);
+            
+            // All three data types coexist
+            assertTrue(marketData.hasSpotPrice("CRUDE_OIL"));
+            assertTrue(marketData.hasForwardCurve("CRUDE_OIL"));
+            assertTrue(marketData.hasHistoricalData("CRUDE_OIL"));
         }
     }
 }
