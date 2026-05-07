@@ -2,6 +2,7 @@ package com.fdm.group.Etrm_Project_Prototype;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -169,6 +170,13 @@ public class TimeSeries {
 
 		return OptionalDouble.of(value);
 
+	}
+	
+	
+	public Collection<Double> getAllValues(){
+		
+		
+		return historicalPrices.values();
 	}
 
 	// =========================================================================
