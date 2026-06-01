@@ -39,7 +39,7 @@ public class GreeksCalculator {
 	 * Calculate delta for a call option (analytical formula)
 	 * 
 	 * Delta = N(d1)
-	 * 
+	 * Directional sensitivity, approximates the probability that the option will expire in the money
 	 * Interpretation: - Delta of 0.6 means option gains $0.60 per $1 increase in
 	 * stock - Range: 0 to 1 for calls - Deep ITM calls approach 1.0 - Deep OTM
 	 * calls approach 0 - ATM calls around 0.5
@@ -58,7 +58,6 @@ public class GreeksCalculator {
 		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
 
 		return pricer.normalCDF(d1);
-
 	}
 
 	/**
@@ -82,7 +81,6 @@ public class GreeksCalculator {
 		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
 
 		return pricer.normalCDF(d1) - 1.0;
-
 	}
 
 	/**
@@ -108,7 +106,7 @@ public class GreeksCalculator {
 	 * @return Gamma value (same for call and put)
 	 */
 
-	public double Gamma(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double gamma(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		if (timeToExpiry <= 0.0) {
 
@@ -139,8 +137,25 @@ public class GreeksCalculator {
 // =========================================================================
 // VEGA - Sensitivity to volatility
 // =========================================================================
+	
+	
+	/**
+     * Calculate vega (analytical formula)
+     * 
+     * Vega = S × N'(d1) × √T
+     * 
+     * Interpretation:
+     * - Vega measures sensitivity to volatility changes
+     * - Same for calls and puts
+     * - Expressed as change in option value per 1% change in volatility
+     * - Highest for ATM options with longer time to expiry
+     * - Long options have positive vega (benefit from vol increase)
+     * - Short options have negative vega (hurt by vol increase)
+     * 
+     * @return Vega value (typically scaled by 0.01 for per-1% change)
+     */
 
-	public double Vega(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double vega(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		if (timeToExpiry <= 0.0) {
 
@@ -260,7 +275,7 @@ public class GreeksCalculator {
 
 	public double rhoCall(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
-		double discountFactor = Math.sqrt(-riskFreeRate * timeToExpiry);
+		double discountFactor = Math.exp(-riskFreeRate * timeToExpiry);
 
 		double d2 = pricer.calculateD2(spot, strike, riskFreeRate, volatility, discountFactor);
 
@@ -282,10 +297,10 @@ public class GreeksCalculator {
 
 	public double rhoPut(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
-		double discountFactor = Math.sqrt(-riskFreeRate * timeToExpiry);
+		double discountFactor = Math.exp(-riskFreeRate * timeToExpiry);
 		double d2 = pricer.calculateD2(spot, strike, riskFreeRate, volatility, discountFactor);
 
-		double nMinusD2 = pricer.normalCDF(d2);
+		double nMinusD2 = pricer.normalCDF(-d2);
 
 		double Rho = -strike * timeToExpiry * discountFactor * nMinusD2;
 
@@ -333,9 +348,9 @@ public class GreeksCalculator {
 		double delta = isCall ? deltaCall(spot, strike, timeToExpiry, volatility, riskFreeRate)
 				: deltaPut(spot, strike, timeToExpiry, volatility, riskFreeRate);
 
-		double gamma = Gamma(spot, strike, timeToExpiry, volatility, riskFreeRate);
+		double gamma = gamma(spot, strike, timeToExpiry, volatility, riskFreeRate);
 
-		double vega = Vega(spot, strike, timeToExpiry, volatility, riskFreeRate);
+		double vega = vega(spot, strike, timeToExpiry, volatility, riskFreeRate);
 
 		double theta = isCall ? thetaCall(spot, strike, timeToExpiry, volatility, riskFreeRate)
 				: thetaPut(spot, strike, timeToExpiry, volatility, riskFreeRate);
