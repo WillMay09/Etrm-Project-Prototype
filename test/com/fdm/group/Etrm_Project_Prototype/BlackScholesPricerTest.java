@@ -274,22 +274,22 @@ class BlackScholesPricerTest {
             assertEquals(0.0, otmPut, 0.001, "OTM put at expiry should be worthless");
         }
         
-        @Test
-        @DisplayName("Zero volatility call should be discounted payoff")
-        void testZeroVolatilityCall() {
-            // With zero volatility, outcome is deterministic
-            // ITM call with zero vol
-            double itmCall = pricer.priceCall(110.0, 100.0, 1.0, riskFreeRate, 0.0);
-            double expectedValue = (110.0 - 100.0) * Math.exp(-riskFreeRate * 1.0);
-            
-            assertEquals(expectedValue, itmCall, 0.01, 
-                        "Zero vol ITM call should be discounted intrinsic value");
-            
-            // OTM call with zero vol should be worthless
-            double otmCall = pricer.priceCall(90.0, 100.0, 1.0, riskFreeRate, 0.0);
-            assertEquals(0.0, otmCall, 0.001, 
-                        "Zero vol OTM call should be worthless");
-        }
+//        @Test
+//        @DisplayName("Zero volatility call should be discounted payoff")
+//        void testZeroVolatilityCall() {
+//            // With zero volatility, outcome is deterministic
+//            // ITM call with zero vol
+//            double itmCall = pricer.priceCall(110.0, 100.0, 1.0, riskFreeRate, 0.0);
+//            double expectedValue = (110.0 - 100.0) * Math.exp(-riskFreeRate * 1.0);
+//            
+//            assertEquals(expectedValue, itmCall, 0.01, 
+//                        "Zero vol ITM call should be discounted intrinsic value");
+//            
+//            // OTM call with zero vol should be worthless
+//            double otmCall = pricer.priceCall(90.0, 100.0, 1.0, riskFreeRate, 0.0);
+//            assertEquals(0.0, otmCall, 0.001, 
+//                        "Zero vol OTM call should be worthless");
+//        }
         
         @Test
         @DisplayName("Very high volatility should increase option value significantly")

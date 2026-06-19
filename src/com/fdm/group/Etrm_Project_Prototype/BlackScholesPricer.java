@@ -74,7 +74,6 @@ public class BlackScholesPricer {
 				return Double.NEGATIVE_INFINITY;
 			}
 		
-			
 		}
 		
 		double sigmaRootT = volatility * Math.sqrt(timeToMaturity);
@@ -109,8 +108,6 @@ public class BlackScholesPricer {
 			double d2 = d1-sigmaRootT;
 			
 			return d2;
-			
-		
 	}
 	
 	
