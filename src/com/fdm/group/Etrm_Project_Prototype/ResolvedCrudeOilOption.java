@@ -1,70 +1,80 @@
 package com.fdm.group.Etrm_Project_Prototype;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
+import com.fdm.group.Etrm_Project_Prototype.CrudeOilOption.PutCall;
+
 public final class ResolvedCrudeOilOption {
 	
-	public enum PutCall {
-		PUT, CALL
-	}
+	
 	private final double strike;
 	
 	private final PutCall putCall;
-	
-	
 	// From Quantity × contractSize — baked in at resolution time
-	
 	private final double scaledQuantity;
-	
 	// Resolved from live market data at resolution time
 	private final double timeToExpiry;
 	private final double impliedVol;
 	private final double riskFreeRate;
 	private final double spot;
-	private final double discountFactor;
+	private final String currency;
+	private final LocalDate settlementDate;
+	private final LocalDate expiryDate;
+	private final double discountFactor; //e^(-r x t), pre-calculated
+	
+	
+	 public double    getStrike()         { return strike; }
+	    public PutCall   getPutCall()        { return putCall; }
+	    public double    getScaledQuantity() { return scaledQuantity; }
+	    public double    getTimeToExpiry()   { return timeToExpiry; }
+	    public double    getImpliedVol()     { return impliedVol; }
+	    public double    getRiskFreeRate()   { return riskFreeRate; }
+	    public double    getSpot()           { return spot; }
+	    public LocalDate getSettlementDate() { return settlementDate; }
+	    public LocalDate getExpiryDate()     { return expiryDate; }
+	    public double getDiscountFactor() { return discountFactor;}
 	
 	
 	
-	
-	public CurrencyAmount presentValue(BlackScholesPricer pricer) {
-		
-		double pricePerUnit = putCall == PutCall.CALL ? pricer.priceCall(spot, strike, timeToExpiry, riskFreeRate, discountFactor):
-			pricer.pricePut(spot, strike, timeToExpiry, riskFreeRate, discountFactor);
-		
-		
+	private ResolvedCrudeOilOption(double strike, String currency, PutCall putCall, double scaledQuantity, double timeToExpiry, double impliedVol, double riskFreeRate, double spot, LocalDate settlementDate, LocalDate expiryDate, double discountFactor) {
+		this.strike = strike;
+		this.putCall = putCall;
+		this.currency = currency;
+		this.scaledQuantity = scaledQuantity;
+		this.timeToExpiry = timeToExpiry;
+		this.impliedVol = impliedVol;
+		this.riskFreeRate = riskFreeRate;
+		this.spot = spot;
+		this.settlementDate = settlementDate;
+		this.expiryDate = expiryDate;
+		this.discountFactor = discountFactor;
 	}
 	
-	public static Builder builder() {
+	
+	public static ResolvedCrudeOilOption of(CrudeOilOptionTrade trade, MarketDataProvider marketData, LocalDate valuationDate) {
 		
-		return new Builder();
+		
+		CrudeOilOption product = trade.getProduct();
+		double lots = trade.getLots();
+		double size = product.getContractSize();
+		
+		long daysToExpiry = ChronoUnit.DAYS.between(valuationDate, trade.getExpiryDate());
+		
+		double timeToExpiry = Math.max(0.0, daysToExpiry);
+		
+		double spot = marketData.getSpotPrice(product.getUnderlying());
+		
+		double vol = marketData.getVolatilitySurface(product.getUnderlying()).getVolatility(product.getStrike(), product.getExpiryDate());
+		double rate = marketData.getRiskFreeRate();
+		
+		////////////////////Come back here /////////////////////////////////////////
+		return new ResolvedCrudeOilOption(product.getStrike(),product.getCurrency(), product.getPutCall(), lots*size,timeToExpiry, vol, rate, spot, Math.exp(-rate* timeToExpiry));
 	}
 	
 	
 	
 	
-	public static class Builder {
-		
-		private double strike;
-		
-		private PutCall putCall;
-		
-		
-		// From Quantity × contractSize — baked in at resolution time
-		
-		private double scaledQuantity;
-		
-		// Resolved from live market data at resolution time
-		private double timeToExpiry;
-		private double impliedVol;
-		private double riskFreeRate;
-		private double spot;
-		private double discountFactor;
-		
-		
-		
-		public Builder() {
-			
-			
-		}
-		
-	}
+
 
 }

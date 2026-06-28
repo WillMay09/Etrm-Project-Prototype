@@ -19,6 +19,7 @@ public final class CrudeOilFuture {
 
 	private final SettlementType settlementType;
 
+	
 	private CrudeOilFuture(Builder builder) {
 
 		this.underlying = Objects.requireNonNull(builder.underlying, "underlying required");

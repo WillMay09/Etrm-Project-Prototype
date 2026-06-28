@@ -22,6 +22,7 @@ public class BlackScholesPricer {
 	
 	
 	
+	//probability density function
 	public double normalPDF(double x) {
 		
 		
@@ -79,8 +80,6 @@ public class BlackScholesPricer {
 		double sigmaRootT = volatility * Math.sqrt(timeToMaturity);
 		
 		double d1 = (Math.log(spotPrice/strikePrice) + ((riskFreeRate + 0.5 * volatility * volatility)*timeToMaturity))/ sigmaRootT;
-		
-		
 		return d1;
 		
 	}
@@ -115,43 +114,16 @@ public class BlackScholesPricer {
 	
 	
 	
-	// =========================================================================
-    // Normal Distribution Functions
-    // =========================================================================
-    
-    /**
-     * Standard normal cumulative distribution function (CDF)
-     * 
-     * Calculates N(x) = P(X ≤ x) where X ~ N(0,1)
-     * Uses error function approximation
-     * 
-     * @param x Value at which to evaluate CDF
-     * @return Probability that standard normal variable ≤ x
-     */
-	
-	// N(x) = 0.5 * [1 + erf(x/√2)]
-	
-	
-	private double calculateCDF(double x) {
-		
-		double Nx = 0.5 * (1+erf(x/SQRT_TWO));
-		
-		return Nx;
-		
-	}
 	
 	
 	public double priceCall(double spot, double strike, double timeToExpiry, double riskFreeRate, double volatility) {
 		
 		double d1 = calculateD1(spot, strike, riskFreeRate, volatility, timeToExpiry);
-		
-		
-		
+	
 		double d2 = calculateD2(spot,strike, riskFreeRate, volatility, timeToExpiry);
 		
 		
 		double callPrice = spot * normalCDF(d1) - strike * Math.exp(-riskFreeRate * timeToExpiry)* normalCDF(d2);
-		
 		return callPrice;
 	}
 	
@@ -161,7 +133,6 @@ public class BlackScholesPricer {
 		
 		//Put-Call parity:
 		//Put = Call - Spot + strike x e^(-rT)
-		
 		
 		double callPrice = priceCall(spot,strike, timeToExpiry, riskFreeRate, volatility);
 		

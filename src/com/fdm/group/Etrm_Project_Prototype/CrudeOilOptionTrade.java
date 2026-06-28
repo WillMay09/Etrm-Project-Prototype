@@ -4,6 +4,16 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
+
+/**
+ * Concrete trade in a crude oil option.
+ * TradeInfo (business context) + CrudeOilOption (product)
+ * + Quantity (signed lots) + TradedPrice (the premium agreed).
+ *
+ * Construction: BUILDER, every field is directly specified at trade time.
+ */
+
+
 public final class CrudeOilOptionTrade implements Trade {
 
 	private final TradeInfo tradeInfo;
@@ -26,7 +36,7 @@ public final class CrudeOilOptionTrade implements Trade {
 	@Override
 	public TradeInfo getInfo() {
 		// TODO Auto-generated method stub
-		return null;
+		return tradeInfo;
 	} 
 	
 	public CrudeOilOption getProduct() {
@@ -57,11 +67,12 @@ public final class CrudeOilOptionTrade implements Trade {
 	public LocalDate getExpiryDate() {
 		return product.getExpiryDate();
 	}
-
+	
+	/**time to expiry in years **/
 	public double timetoExpiry() {
 
 		long days = ChronoUnit.DAYS.between(LocalDate.now(), product.getExpiryDate());
-		return Math.max(0.0, days);
+		return Math.max(0.0, days/365.0);
 
 	}
 	
@@ -187,18 +198,18 @@ public final class CrudeOilOptionTrade implements Trade {
 			
 		}
 		
-		public CrudeOilOptionTrade Build() {
+		public CrudeOilOptionTrade build() {
 			
 			return new CrudeOilOptionTrade(this);
 		}
 
 	}
 	
-//	 @Override
-//	    public String toString() {
-//	        return String.format(
-//	            "CrudeOilOptionTrade[%s | %s | %s | premium=%.4f/unit | total=%,.0f USD]",
-//	            getTradeId(), product, quantity, tradedPrice.getPrice(), Math.abs(getTotalPremium())
-//	        );
-
+//	@Override
+//    public String toString() {
+//        return String.format(
+//            "CrudeOilOptionTrade[%s | %s | %s | premium=%.4f/unit | total=%,.0f USD]",
+//            tradeInfo.getId().orElse("UNKNOWN"), product, quantity,
+//            tradedPrice.getPrice(), Math.abs(getTotalPremium())
+//        );
 }

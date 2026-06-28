@@ -3,6 +3,15 @@ package com.fdm.group.Etrm_Project_Prototype;
 import java.time.LocalDate;
 import java.util.Objects;
 
+
+/**
+ * Pure instrument definition - what the pricer needs, nothing else.
+ * No TradeInfo, no quantity, no traded price. Just the mathematical shape
+ * of the option: strike, expiry, direction, contract size.
+ *
+ * Construction: BUILDER pattern - every field here is something a trader
+ * directly specifies when structuring the deal.
+ */
 public final class CrudeOilOption {
 
 	public enum PutCall {
