@@ -69,7 +69,7 @@ public final class CrudeOilOptionTrade implements Trade {
 	}
 	
 	/**time to expiry in years **/
-	public double timetoExpiry() {
+	public double getTimetoExpiry() {
 
 		long days = ChronoUnit.DAYS.between(LocalDate.now(), product.getExpiryDate());
 		return Math.max(0.0, days/365.0);

@@ -168,13 +168,13 @@ public final class CrudeOilFutureTrade implements Trade {
 
 	}
 	
-  //  @Override
-//    public String toString() {
-//        return String.format(
-//            "CrudeOilFutureTrade[%s | %s | %s | entry=%.2f/BBL]",
-//            getTradeId(), product, quantity, tradedPrice.getPrice()
-//        );
-
+//	 @Override
+//	    public String toString() {
+//	        return String.format(
+//	            "CrudeOilFutureTrade[%s | %s | %s | entry=%.2f/BBL]",
+//	            info.getId().orElse("UNKNOWN"), product, quantity, tradedPrice.getPrice()
+//	        );
+//	    }
 
 //}
 }

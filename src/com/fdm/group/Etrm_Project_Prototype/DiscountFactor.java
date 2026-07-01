@@ -22,7 +22,6 @@ public final class DiscountFactor {
 		
 	}
 	
-	
 	 /**
      * Continuously-compounded discount factor.
      * df = e^(-r x T)

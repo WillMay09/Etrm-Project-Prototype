@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public class TradeInfo {
 
-	private final int standardId;
+	private final String standardId;
 	private final String counterparty;
 	private final LocalDate tradeDate;
 	private final LocalTime tradeTime;
@@ -35,7 +35,7 @@ public class TradeInfo {
 	// =========================================================================
 		// Getters - Optional Fields
 		// =========================================================================
-	public Optional<Integer> getStandardId(){
+	public Optional<String> getStandardId(){
 		
 		return Optional.ofNullable(standardId);
 	}
@@ -50,26 +50,26 @@ public class TradeInfo {
 	
     // ── With methods return new instances, original unchanged ────────
     
-    public TradeInfo withStandardId(int standardId) {
+    public TradeInfo withStandardId(String standardId) {
     	
-    	return toBuilder().standardId(standardId).Build();
+    	return toBuilder().standardId(standardId).build();
     }
     
     
     public TradeInfo withSettlementDate(LocalDate newSettlementDate) {
     	
-    	return toBuilder().settlementDate(newSettlementDate).Build();
+    	return toBuilder().settlementDate(newSettlementDate).build();
     }
     
     public TradeInfo withBook(String newBook) {
     	
     	
-    	return toBuilder().book(newBook).Build();
+    	return toBuilder().book(newBook).build();
     }
     
     public TradeInfo withTrader(String newTrader) {
     	
-    	return toBuilder().trader(newTrader).Build();
+    	return toBuilder().trader(newTrader).build();
     }
     
     
@@ -79,7 +79,7 @@ public class TradeInfo {
     	
     	updated.put(key, value);
     	
-    	return toBuilder().attributes(updated).Build();
+    	return toBuilder().attributes(updated).build();
     	
     }
     
@@ -88,12 +88,12 @@ public class TradeInfo {
     	
     	Builder b = toBuilder();
     	
-    	if(standardId == 0) {other.getStandardId().ifPresent(b::standardId);}
+    	if(standardId == null) {other.getStandardId().ifPresent(b::standardId);}
     	if (counterparty == null)   other.getCounterparty().ifPresent(b::counterparty);
         if (tradeDate == null)      other.getTradeDate().ifPresent(b::tradeDate);
         if (settlementDate == null) other.getSettlementDate().ifPresent(b::settlementDate);
         if (book == null)           other.getBook().ifPresent(b::book);
-        return b.Build();
+        return b.build();
     }
     
     
@@ -130,7 +130,7 @@ public class TradeInfo {
 
 	public static class Builder {
 
-		private int standardId;
+		private String standardId;
 		private String counterparty;
 		private LocalDate tradeDate;
 		private LocalTime tradeTime;
@@ -144,9 +144,9 @@ public class TradeInfo {
 			
 		}
 
-		public Builder standardId(int standardId) {
+		public Builder standardId(String standardId2) {
 
-			this.standardId = standardId;
+			this.standardId = standardId2;
 
 			return this;
 		}
@@ -199,7 +199,7 @@ public class TradeInfo {
 			return this;
 		}
 
-		public TradeInfo Build() {
+		public TradeInfo build() {
 
 			return new TradeInfo(this);
 		}
@@ -209,6 +209,7 @@ public class TradeInfo {
 			return "TradeInfo{" + "id=" + standardId + ", counterparty=" + counterparty + ", tradeDate=" + tradeDate
 					+ ", settlementDate=" + settlementDate + ", book=" + book + '}';
 		}
+
 
 	}
 }

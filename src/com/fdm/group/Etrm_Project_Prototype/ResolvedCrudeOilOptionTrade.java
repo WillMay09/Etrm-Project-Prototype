@@ -2,15 +2,16 @@ package com.fdm.group.Etrm_Project_Prototype;
 
 import java.time.LocalDate;
 
+/**
+ * Resolved TRADE - same TradeInfo (unchanged, carried straight through),
+ * plus the resolved product. Mirrors OpenGamma's ResolvedFraTrade exactly:
+ * this class does ZERO resolution itself, it is purely a carrier.
+ */
+
 public final class ResolvedCrudeOilOptionTrade {
-	
-	
 	
 	private final TradeInfo tradeInfo;
 	private final ResolvedCrudeOilOption resolvedProduct;
-	
-	
-	
 	
 	
 	public ResolvedCrudeOilOptionTrade(TradeInfo tradeInfo, ResolvedCrudeOilOption resolvedProduct){
