@@ -112,7 +112,7 @@ public final class CrudeOilFuture {
 			return this;
 		}
 
-		public CrudeOilFuture Build() {
+		public CrudeOilFuture build() {
 
 			return new CrudeOilFuture(this);
 		}

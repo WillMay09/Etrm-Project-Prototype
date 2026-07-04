@@ -37,7 +37,7 @@ public final class TradedPrice {
     	this.currency = currency;
     	this.priceUnit = priceUnit;
     	
-    	if(price<= 0 ) {
+    	if(price< 0 ) {
     		
     		throw new IllegalArgumentException("Price must be greater than 0");
     	}

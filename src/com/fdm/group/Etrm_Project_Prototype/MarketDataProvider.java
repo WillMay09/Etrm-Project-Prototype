@@ -25,6 +25,8 @@ public class MarketDataProvider {
 	/** Historical price time series by commodity */
 
 	private final Map<String, TimeSeries> historicalData;
+	
+	private final Map<String, Double> riskFreeRates;
 
 	private final Map<String, Object> metaData;
 
@@ -37,6 +39,7 @@ public class MarketDataProvider {
 		this.forwardCurves = Map.copyOf(builder.forwardCurves);
 		this.volatilitySurfaces = Map.copyOf(builder.volatilitySurfaces);
 		this.historicalData = Map.copyOf(builder.historicalData);
+		this.riskFreeRates = Map.copyOf(builder.riskFreeRates);
 		this.metaData = Map.copyOf(builder.metaData);
 	}
 
@@ -177,6 +180,34 @@ public class MarketDataProvider {
 		return volatility;
 	}
 	
+	
+	/**
+	 * Get risk-free rate for a currency.
+	 * Mirrors OpenGamma's RatesProvider.discountFactor() contract:
+	 * the rate is currency-specific and always queried, never assumed.
+	 *
+	 * @param currency ISO-4217 currency code, e.g. "USD"
+	 * @return risk-free rate as decimal (0.05 = 5%)
+	 * @throws IllegalArgumentException if no rate exists for currency
+	 */
+	public double getRiskFreeRate(String currency) {
+	    if (!riskFreeRates.containsKey(currency)) {
+	        throw new IllegalArgumentException("No risk-free rate for currency: " + currency);
+	    }
+	    return riskFreeRates.get(currency);
+	}
+
+	/**
+	 * Convenience method for USD (the dominant currency in energy markets).
+	 * Equivalent to getRiskFreeRate("USD").
+	 */
+	public double getRiskFreeRate() {
+	    return getRiskFreeRate("USD");
+	}
+
+	public boolean hasRiskFreeRate(String currency) {
+	    return riskFreeRates.containsKey(currency);
+	}
 
 	/**
 	 * Check if spot price exists for commodity
@@ -284,6 +315,7 @@ public class MarketDataProvider {
 				.forwardCurves(this.forwardCurves)
 				.volatilitySurfaces(this.volatilitySurfaces)
 				.historicalData(this.historicalData)
+				.riskFreeRates(this.riskFreeRates)
 				.metadata(this.metaData);
 
 	}
@@ -298,6 +330,7 @@ public class MarketDataProvider {
 
 		private Map<String, VolatilitySurface> volatilitySurfaces = new HashMap<>();
 		private Map<String, TimeSeries> historicalData = new HashMap<>();
+		private Map<String, Double> riskFreeRates = new HashMap<>();
 		private Map<String, Object> metaData = new HashMap<>();
 
 		private Builder() {
@@ -385,6 +418,18 @@ public class MarketDataProvider {
 			this.historicalData.put(commodity, timeSeries);
 			return this;
 		}
+		
+		public Builder addRiskFreeRate(String currency, double rate) {
+		    Objects.requireNonNull(currency, "Currency must not be null");
+		    if (rate < -0.10 || rate > 0.50) {
+		        throw new IllegalArgumentException(
+		            "Risk-free rate " + rate + " looks wrong for currency " + currency +
+		            " (expected between -10% and +50%)"
+		        );
+		    }
+		    this.riskFreeRates.put(currency.toUpperCase(), rate);
+		    return this;
+		}
 
 		/**
 		 * Add metadata
@@ -396,6 +441,10 @@ public class MarketDataProvider {
 		public Builder metadata(String key, Object value) {
 			this.metaData.put(key, value);
 			return this;
+		}
+		
+		public Builder riskFreeRate(double rate) {
+		    return addRiskFreeRate("USD", rate);
 		}
 
 		// =====================================================================
@@ -431,6 +480,11 @@ public class MarketDataProvider {
 		private Builder metadata(Map<String, Object> meta) {
 			this.metaData.putAll(meta);
 			return this;
+		}
+		
+		private Builder riskFreeRates(Map<String, Double> rates) {
+		    this.riskFreeRates.putAll(rates);
+		    return this;
 		}
 
 		// =====================================================================

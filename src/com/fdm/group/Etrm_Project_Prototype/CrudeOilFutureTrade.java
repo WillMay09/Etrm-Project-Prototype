@@ -150,6 +150,20 @@ public final class CrudeOilFutureTrade implements Trade {
 			this.tradedPrice = price;
 			return this;
 		}
+		
+		public Builder entryPrice(double price) {
+			
+			if(info == null || info.getTradeDate().isEmpty()) {
+				
+				throw new IllegalStateException("Set TradeInfo with tradeDate before calling entryPrice");
+			}
+			
+			this.tradedPrice = TradedPrice.of(info.getTradeDate().get(), price, "USD", "USD/BBL");
+			
+			
+			return this;
+		}
+		
 
 		public Builder longPosition(double lots) {
 			this.quantity = Quantity.longLots(lots);
@@ -160,8 +174,9 @@ public final class CrudeOilFutureTrade implements Trade {
 			this.quantity = Quantity.shortLots(lots);
 			return this;
 		}
+		
 
-		public CrudeOilFutureTrade Build() {
+		public CrudeOilFutureTrade build() {
 
 			return new CrudeOilFutureTrade(this);
 		}
