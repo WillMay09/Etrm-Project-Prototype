@@ -108,7 +108,8 @@ public class TradeInfo {
     			.tradeTime(tradeTime)
     			.settlementDate(settlementDate)
     			.book(book)
-    			.trader(trader);
+    			.trader(trader)
+    			.attributes(new HashMap<>(attributes));
     	
     }
     
@@ -137,7 +138,7 @@ public class TradeInfo {
 		private LocalDate settlementDate;
 		private String book;
 		private String trader;
-		private Map<String, String> attributes;
+		private Map<String, String> attributes = new HashMap<>();
 		
 		private Builder() {
 			
@@ -185,6 +186,16 @@ public class TradeInfo {
 		public Builder trader(String trader) {
 			this.trader = trader;
 			return this;
+		}
+		
+		public Builder defaultsettlement() {
+			
+			if(tradeDate != null) {
+				
+				this.settlementDate = LocalDate.now().plusDays(2);
+			}
+			return this;
+			
 		}
 
 		public Builder addAttribute(String key, String value) {

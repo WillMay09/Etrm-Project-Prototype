@@ -91,7 +91,7 @@ public final class CrudeOilOptionTrade implements Trade {
 	public double getTotalPremium() {
 		
 		double raw = tradedPrice.notionalValue( quantity.getValue(),product.getContractSize());
-		return quantity.isLong() ? raw : -raw;
+		return raw;
 	}
 	
 	
@@ -205,11 +205,12 @@ public final class CrudeOilOptionTrade implements Trade {
 
 	}
 	
-//	@Override
-//    public String toString() {
-//        return String.format(
-//            "CrudeOilOptionTrade[%s | %s | %s | premium=%.4f/unit | total=%,.0f USD]",
-//            tradeInfo.getId().orElse("UNKNOWN"), product, quantity,
-//            tradedPrice.getPrice(), Math.abs(getTotalPremium())
-//        );
+	@Override
+    public String toString() {
+        return String.format(
+            "CrudeOilOptionTrade[%s | %s | %s | premium=%.4f/unit | total=%,.0f USD]",
+            tradeInfo.getStandardId().orElse("UNKNOWN"), product, quantity,
+            tradedPrice.getPrice(), Math.abs(getTotalPremium())
+        );
+}
 }

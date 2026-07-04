@@ -71,11 +71,12 @@ public final class CrudeOilFutureTrade implements Trade {
 	public LocalDate getDeliveryDate() { return product.getDeliveryDate();}
 	
 	
+	//returns in years
 	public double getTimeToDelivery() {
 		
 		long days = ChronoUnit.DAYS.between(LocalDate.now(), product.getDeliveryDate());
 		
-		return Math.max(0.0, days);
+		return Math.max(0.0, days/365.0);
 		
 	}
 	
@@ -183,13 +184,13 @@ public final class CrudeOilFutureTrade implements Trade {
 
 	}
 	
-//	 @Override
-//	    public String toString() {
-//	        return String.format(
-//	            "CrudeOilFutureTrade[%s | %s | %s | entry=%.2f/BBL]",
-//	            info.getId().orElse("UNKNOWN"), product, quantity, tradedPrice.getPrice()
-//	        );
-//	    }
+	 @Override
+	    public String toString() {
+	        return String.format(
+	            "CrudeOilFutureTrade[%s | %s | %s | entry=%.2f/BBL]",
+	            info.getStandardId().orElse("UNKNOWN"), product, quantity, tradedPrice.getPrice()
+	        );
+ 	    }
 
-//}
+ 
 }
