@@ -42,12 +42,15 @@ public final class ResolvedCrudeOilOption {
 	    public PutCall   getPutCall()        { return putCall; }
 	    public double    getScaledQuantity() { return scaledQuantity; }
 	    public double    getTimeToExpiry()   { return timeToExpiry; }
+	    public double 	 getTimeToExpiryYears() {return (timeToExpiry/365.0);}
 	    public double    getImpliedVol()     { return impliedVol; }
 	    public double    getRiskFreeRate()   { return riskFreeRate; }
 	    public double    getSpot()           { return spot; }
+	    public String 	 getCurrency()		{return currency;}
 	    public LocalDate getSettlementDate() { return settlementDate; }
 	    public LocalDate getExpiryDate()     { return expiryDate; }
 	    public double getDiscountFactor() { return discountFactor;}
+	    
 	
 	
 	
