@@ -11,7 +11,7 @@ public final class CrudeOilOptionPricer {
 	private final BlackScholesPricer blackScholes;
 
 	
-	
+	//dependency injection
 	public CrudeOilOptionPricer(BlackScholesPricer blackScholes) {
 		
 		this.blackScholes = blackScholes;
@@ -46,5 +46,13 @@ public final class CrudeOilOptionPricer {
 		
 		
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 
 }
