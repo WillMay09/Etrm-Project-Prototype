@@ -129,14 +129,16 @@ public final class CrudeOilOptionPricer {
 	}
 	
 	
-	public CashFlow cashFlows(ResolvedCrudeOilOption option) {
+	public CashFlows cashFlows(ResolvedCrudeOilOption option) {
 		
 		//product has one cashflow: expected payoff at expiry
 		
 		double fv = forecastValue(option).getAmount();
 		CurrencyAmount forecastAmount = CurrencyAmount.of(option.getCurrency(), fv);
 		
-		return CashFlow.ofForecastValue(option.getExpiryDate(),forecastAmount , option.getDiscountFactor());
+		CashFlow payoffFlow = CashFlow.ofForecastValue(option.getExpiryDate(),forecastAmount , option.getDiscountFactor());
+		
+		return CashFlows.of(payoffFlow);
 				
 		
 	}

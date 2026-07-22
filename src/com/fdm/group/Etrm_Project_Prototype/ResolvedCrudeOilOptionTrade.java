@@ -24,6 +24,12 @@ public final class ResolvedCrudeOilOptionTrade {
 	public TradeInfo              getInfo()    { return tradeInfo; }
     public ResolvedCrudeOilOption getProduct() { return resolvedProduct; }
     
+    
+    //come back to this
+    public double getTotalPremium() {return resolvedProduct.getScaledQuantity() * resolvedProduct.getSpot();};
+    
+    
+    
     public static ResolvedCrudeOilOptionTrade of(CrudeOilOptionTrade trade, MarketDataProvider marketData, LocalDate valuationDate) {
     	
     	ResolvedCrudeOilOption resolvedProduct = ResolvedCrudeOilOption.of(trade, marketData, valuationDate);
