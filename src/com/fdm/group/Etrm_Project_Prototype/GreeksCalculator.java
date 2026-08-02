@@ -47,16 +47,15 @@ public class GreeksCalculator {
 	 * @return Delta value
 	 */
 
-	public double deltaCall(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double deltaCall(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		// Delta is 1 if ITM or 0 if OTM at expiry
 		if (timeToExpiry <= 0.0) {
 
-			return spot >= strike ? 1.0 : 0.0;
+			return forwardPrice >= strike ? 1.0 : 0.0;
 		}
 
-		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
-
+		double d1 = pricer.calculateD1(forwardPrice, strike, riskFreeRate, volatility, riskFreeRate);
 		return pricer.normalCDF(d1);
 	}
 
@@ -71,14 +70,14 @@ public class GreeksCalculator {
 	 * @return Delta value (negative for puts)
 	 */
 
-	public double deltaPut(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double deltaPut(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		if (timeToExpiry <= 0.0) {
 
-			return spot <= strike ? -1.0 : 0.0;
+			return forwardPrice <= strike ? -1.0 : 0.0;
 		}
 
-		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
+		double d1 = pricer.calculateD1(forwardPrice, strike, riskFreeRate, volatility, riskFreeRate);
 
 		return pricer.normalCDF(d1) - 1.0;
 	}
@@ -106,20 +105,20 @@ public class GreeksCalculator {
 	 * @return Gamma value (same for call and put)
 	 */
 
-	public double gamma(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double gamma(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		if (timeToExpiry <= 0.0) {
 
 			return 0.0;
 		}
 
-		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
+		double d1 = pricer.calculateD1(forwardPrice, strike, riskFreeRate, volatility, riskFreeRate);
 
 		double pdf = pricer.normalPDF(d1);
 
 		double sigmaRootT = volatility * Math.sqrt(timeToExpiry);
 
-		return pdf / (spot * sigmaRootT);
+		return pdf / (forwardPrice * sigmaRootT);
 
 	}
 
@@ -155,19 +154,19 @@ public class GreeksCalculator {
      * @return Vega value (typically scaled by 0.01 for per-1% change)
      */
 
-	public double vega(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double vega(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		if (timeToExpiry <= 0.0) {
 
 			return 0.0; // No vega at expiry
 		}
 
-		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
+		double d1 = pricer.calculateD1(forwardPrice, strike, riskFreeRate, volatility, riskFreeRate);
 		double rootT = Math.sqrt(timeToExpiry);
 
 		double pdf = pricer.normalPDF(d1);
 
-		return spot * pdf * rootT / 100.0;
+		return forwardPrice * pdf * rootT / 100.0;
 
 	}
 
@@ -188,10 +187,10 @@ public class GreeksCalculator {
 	 * @return Theta value (typically negative for long calls)
 	 */
 
-	public double thetaCall(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double thetaCall(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
-		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, riskFreeRate);
-		double d2 = pricer.calculateD2(spot, strike, riskFreeRate, volatility, d1);
+		double d1 = pricer.calculateD1(forwardPrice, strike, riskFreeRate, volatility, riskFreeRate);
+		double d2 = pricer.calculateD2(forwardPrice, strike, riskFreeRate, volatility, d1);
 
 		double rootT = Math.sqrt(timeToExpiry);
 		double nd2 = pricer.normalCDF(d2);
@@ -201,7 +200,7 @@ public class GreeksCalculator {
 		double discountFactor = Math.exp(-riskFreeRate * timeToExpiry);
 
 		// -(S × N'(d1) × σ) / (2√T)
-		double firstTerm = -(spot * pdf * volatility) / (2 * rootT);
+		double firstTerm = -(forwardPrice * pdf * volatility) / (2 * rootT);
 
 		// -rK × e^(-rT) × N(d2)
 		double secondTerm = -(riskFreeRate * strike * discountFactor * nd2);
@@ -219,14 +218,14 @@ public class GreeksCalculator {
 	 * @return Theta value
 	 */
 
-	public double thetaPut(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double thetaPut(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		if (timeToExpiry <= 0.0) {
 			return 0.0; // No theta at expiry
 		}
 
-		double d1 = pricer.calculateD1(spot, strike, riskFreeRate, volatility, timeToExpiry);
-		double d2 = pricer.calculateD2(spot, strike, riskFreeRate, volatility, timeToExpiry);
+		double d1 = pricer.calculateD1(forwardPrice, strike, riskFreeRate, volatility, timeToExpiry);
+		double d2 = pricer.calculateD2(forwardPrice, strike, riskFreeRate, volatility, timeToExpiry);
 
 		double pdf = pricer.normalPDF(d1);
 		double nMinusD2 = pricer.normalCDF(-d2);
@@ -235,7 +234,7 @@ public class GreeksCalculator {
 		double discountFactor = Math.exp(-riskFreeRate * timeToExpiry);
 
 		// First term: -(S × N'(d1) × σ) / (2√T)
-		double term1 = -(spot * pdf * volatility) / (2.0 * rootT);
+		double term1 = -(forwardPrice * pdf * volatility) / (2.0 * rootT);
 
 		// Second term: +rK × e^(-rT) × N(-d2)
 		double term2 = riskFreeRate * strike * discountFactor * nMinusD2;
@@ -273,11 +272,11 @@ public class GreeksCalculator {
 	 * @return Rho value
 	 */
 
-	public double rhoCall(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double rhoCall(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		double discountFactor = Math.exp(-riskFreeRate * timeToExpiry);
 
-		double d2 = pricer.calculateD2(spot, strike, riskFreeRate, volatility, discountFactor);
+		double d2 = pricer.calculateD2(forwardPrice, strike, riskFreeRate, volatility, discountFactor);
 
 		double nd2 = pricer.normalCDF(d2);
 
@@ -295,10 +294,10 @@ public class GreeksCalculator {
 	 * @return Rho value (negative for puts)
 	 */
 
-	public double rhoPut(double spot, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
+	public double rhoPut(double forwardPrice, double strike, double timeToExpiry, double volatility, double riskFreeRate) {
 
 		double discountFactor = Math.exp(-riskFreeRate * timeToExpiry);
-		double d2 = pricer.calculateD2(spot, strike, riskFreeRate, volatility, discountFactor);
+		double d2 = pricer.calculateD2(forwardPrice, strike, riskFreeRate, volatility, discountFactor);
 
 		double nMinusD2 = pricer.normalCDF(-d2);
 
@@ -342,20 +341,20 @@ public class GreeksCalculator {
 	 * @return OptionGreeks object with all Greeks
 	 */
 
-	public OptionGreeks calculateAllGreeks(double spot, double strike, double timeToExpiry, double volatility,
+	public OptionGreeks calculateAllGreeks(double forwardPrice, double strike, double timeToExpiry, double volatility,
 			double riskFreeRate, boolean isCall) {
 
-		double delta = isCall ? deltaCall(spot, strike, timeToExpiry, volatility, riskFreeRate)
-				: deltaPut(spot, strike, timeToExpiry, volatility, riskFreeRate);
+		double delta = isCall ? deltaCall(forwardPrice, strike, timeToExpiry, volatility, riskFreeRate)
+				: deltaPut(forwardPrice, strike, timeToExpiry, volatility, riskFreeRate);
 
-		double gamma = gamma(spot, strike, timeToExpiry, volatility, riskFreeRate);
+		double gamma = gamma(forwardPrice, strike, timeToExpiry, volatility, riskFreeRate);
 
-		double vega = vega(spot, strike, timeToExpiry, volatility, riskFreeRate);
+		double vega = vega(forwardPrice, strike, timeToExpiry, volatility, riskFreeRate);
 
-		double theta = isCall ? thetaCall(spot, strike, timeToExpiry, volatility, riskFreeRate)
-				: thetaPut(spot, strike, timeToExpiry, volatility, riskFreeRate);
+		double theta = isCall ? thetaCall(forwardPrice, strike, timeToExpiry, volatility, riskFreeRate)
+				: thetaPut(forwardPrice, strike, timeToExpiry, volatility, riskFreeRate);
 		
-		double rho = isCall ? rhoCall(spot,strike,timeToExpiry,volatility,riskFreeRate) : rhoPut(spot,strike,timeToExpiry,volatility,riskFreeRate);
+		double rho = isCall ? rhoCall(forwardPrice,strike,timeToExpiry,volatility,riskFreeRate) : rhoPut(spot,strike,timeToExpiry,volatility,riskFreeRate);
 
 		
 		

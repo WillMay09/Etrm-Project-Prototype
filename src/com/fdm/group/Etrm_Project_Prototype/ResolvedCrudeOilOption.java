@@ -31,7 +31,7 @@ public final class ResolvedCrudeOilOption {
 	private final double timeToExpiry;
 	private final double impliedVol;
 	private final double riskFreeRate;
-	private final double spot;
+	private final double forward;
 	private final String currency;
 	private final LocalDate settlementDate;
 	private final LocalDate expiryDate;
@@ -45,7 +45,7 @@ public final class ResolvedCrudeOilOption {
 	    public double 	 getTimeToExpiryYears() {return (timeToExpiry/365.0);}
 	    public double    getImpliedVol()     { return impliedVol; }
 	    public double    getRiskFreeRate()   { return riskFreeRate; }
-	    public double    getSpot()           { return spot; }
+	    public double    getforwardPrice()           { return forward; }
 	    public String 	 getCurrency()		{return currency;}
 	    public LocalDate getSettlementDate() { return settlementDate; }
 	    public LocalDate getExpiryDate()     { return expiryDate; }
@@ -55,7 +55,7 @@ public final class ResolvedCrudeOilOption {
 	
 	
 	private ResolvedCrudeOilOption(double strike, String currency, 
-			PutCall putCall, double scaledQuantity, double timeToExpiry, double impliedVol, double riskFreeRate, double spot, 
+			PutCall putCall, double scaledQuantity, double timeToExpiry, double impliedVol, double riskFreeRate, double forward, 
 			LocalDate settlementDate, LocalDate expiryDate, double discountFactor) {
 		this.strike = strike;
 		this.putCall = putCall;
@@ -64,7 +64,10 @@ public final class ResolvedCrudeOilOption {
 		this.timeToExpiry = timeToExpiry;
 		this.impliedVol = impliedVol;
 		this.riskFreeRate = riskFreeRate;
-		this.spot = spot;
+		
+		
+		//change to forward price
+		this.forward = forward;
 		this.settlementDate = settlementDate;
 		this.expiryDate = expiryDate;
 		this.discountFactor = discountFactor;
@@ -86,7 +89,10 @@ public final class ResolvedCrudeOilOption {
 		
 		double timeToExpiry = Math.max(0.0, daysToExpiry);
 		
-		double spot = marketData.getSpotPrice(product.getUnderlying());
+		
+		//change to forward price
+		
+		double forward = marketData.getForwardPrice(product.getUnderlying(), product.getExpiryDate());
 		
 		double vol = marketData.getVolatilitySurface(product.getUnderlying()).getVolatility(product.getStrike(), product.getExpiryDate());
 		
@@ -104,7 +110,7 @@ public final class ResolvedCrudeOilOption {
 		            timeToExpiry,
 		            vol,
 		            rate,
-		            spot,
+		            forward,
 		            settlementDate,                                   
 		            product.getExpiryDate(),                          
 		            DiscountFactor.of(rate, timeToExpiry)              
