@@ -26,7 +26,7 @@ public final class ResolvedCrudeOilOptionTrade {
     
     
     //come back to this
-    public double getTotalPremium() {return resolvedProduct.getScaledQuantity() * resolvedProduct.getSpot();};
+    public double getTotalPremium() {return resolvedProduct.getScaledQuantity() * resolvedProduct.getforwardPrice();};
     
     
     
